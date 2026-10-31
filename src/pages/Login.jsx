@@ -22,15 +22,13 @@ export default function Login() {
     setBusy(true);
 
     try {
-      // 1. Connexion de l'utilisateur
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       const user = data.user;
 
@@ -38,23 +36,20 @@ export default function Login() {
         throw new Error("Impossible de récupérer les informations du compte.");
       }
 
-      // 2. Récupération du rôle dans la table profiles
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data: profile, error: profileError } =
+        await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
 
-      if (profileError) {
-        throw profileError;
-      }
+      if (profileError) throw profileError;
 
       if (!profile) {
         await supabase.auth.signOut();
         throw new Error("Profil utilisateur introuvable.");
       }
 
-      // 3. Redirection selon le rôle
       if (profile.role === "admin") {
         nav("/administration", { replace: true });
       } else if (profile.role === "artist") {
@@ -63,22 +58,30 @@ export default function Login() {
         await supabase.auth.signOut();
         throw new Error("Votre compte ne possède pas de rôle autorisé.");
       }
+
     } catch (error) {
-      setMessage(error.message || "Une erreur est survenue");
+      setMessage(
+        error.message || "Une erreur est survenue lors de la connexion."
+      );
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="page">
+    <section className="form-card">
+
+      <p className="eyebrow">BON RETOUR</p>
+
       <h1>Connexion</h1>
 
       <form onSubmit={submit}>
+
         <label>
           Email
           <input
             type="email"
+            placeholder="Votre adresse email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -89,22 +92,32 @@ export default function Login() {
           Mot de passe
           <input
             type="password"
+            placeholder="Votre mot de passe"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </label>
 
-        <button type="submit" disabled={busy}>
+        <button
+          type="submit"
+          className="btn primary"
+          disabled={busy}
+        >
           {busy ? "Connexion..." : "Se connecter"}
         </button>
+
       </form>
 
-      {message && <p>{message}</p>}
+      {message && (
+        <p className="notice">{message}</p>
+      )}
 
-      <p>
-        Pas encore de compte ? <Link to="/inscription">Créer un compte</Link>
+      <p className="muted">
+        Pas encore de compte ?{" "}
+        <Link to="/inscription">Créer un compte</Link>
       </p>
-    </div>
+
+    </section>
   );
 }
