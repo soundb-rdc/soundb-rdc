@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import "./AdminDashboard.css";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -47,6 +48,7 @@ export default function AdminDashboard() {
 
       setArtists(artistsResult.data || []);
       setTracks(tracksResult.data || []);
+
     } catch (err) {
       setError(err.message || "Erreur de chargement.");
     } finally {
@@ -75,7 +77,9 @@ export default function AdminDashboard() {
 
       setTracks((current) =>
         current.map((track) =>
-          track.id === trackId ? { ...track, status } : track
+          track.id === trackId
+            ? { ...track, status }
+            : track
         )
       );
 
@@ -86,6 +90,7 @@ export default function AdminDashboard() {
           ? "Musique refusée."
           : "Musique remise en attente."
       );
+
     } catch (err) {
       setError(err.message || "Impossible de modifier le statut.");
     } finally {
@@ -93,12 +98,12 @@ export default function AdminDashboard() {
     }
   }
 
-  const pending = tracks.filter((track) => track.status === "pending");
-  const approved = tracks.filter((track) => track.status === "approved");
-  const rejected = tracks.filter((track) => track.status === "rejected");
+  const pending = tracks.filter((t) => t.status === "pending");
+  const approved = tracks.filter((t) => t.status === "approved");
+  const rejected = tracks.filter((t) => t.status === "rejected");
 
   function artistLabel(artistId) {
-    const artist = artists.find((item) => item.id === artistId);
+    const artist = artists.find((a) => a.id === artistId);
 
     if (!artist) return "Artiste non identifié";
 
@@ -113,29 +118,45 @@ export default function AdminDashboard() {
 
   function renderTrack(track) {
     return (
-      <li key={track.id}>
-        <strong>{track.title || "Sans titre"}</strong>
-        <span> — {artistLabel(track.artist_id)}</span>
+      <article className="admin-track-card" key={track.id}>
+        <div className="admin-track-info">
+          <h3>{track.title || "Sans titre"}</h3>
+          <p>Artiste : {artistLabel(track.artist_id)}</p>
+          <span className={`admin-status ${track.status || "unknown"}`}>
+            {track.status === "approved"
+              ? "Approuvée"
+              : track.status === "rejected"
+              ? "Refusée"
+              : track.status === "pending"
+              ? "En attente"
+              : "Non défini"}
+          </span>
+        </div>
 
-        <div>
+        <div className="admin-track-actions">
           {track.status !== "approved" && (
             <button
+              className="admin-btn approve"
               disabled={busyTrack !== null}
               onClick={() => changeTrackStatus(track.id, "approved")}
             >
               Approuver
             </button>
           )}
+
           {track.status !== "rejected" && (
             <button
+              className="admin-btn reject"
               disabled={busyTrack !== null}
               onClick={() => changeTrackStatus(track.id, "rejected")}
             >
               Refuser
             </button>
           )}
+
           {track.status !== "pending" && (
             <button
+              className="admin-btn pending"
               disabled={busyTrack !== null}
               onClick={() => changeTrackStatus(track.id, "pending")}
             >
@@ -143,52 +164,143 @@ export default function AdminDashboard() {
             </button>
           )}
         </div>
-      </li>
+      </article>
     );
   }
 
   if (loading) {
-    return <p>Chargement de l'administration...</p>;
+    return (
+      <div className="admin-loading">
+        Chargement de l'administration SOUND-B...
+      </div>
+    );
   }
 
   if (error && artists.length === 0 && tracks.length === 0) {
-    return <div className="notice">{error}</div>;
+    return <div className="admin-alert error">{error}</div>;
   }
 
   return (
-    <section>
-      <p className="eyebrow">DMP CREATOR PRODUCTION</p>
+    <main className="admin-container">
 
-      <h1>Administration SOUND-B</h1>
+      <header className="admin-header">
+        <div>
+          <p className="admin-eyebrow">DMP CREATOR PRODUCTION</p>
+          <h1>Administration SOUND-B</h1>
+          <p>Centre de gestion et de validation musicale.</p>
+        </div>
 
-      <p className="muted">
-        Artistes : {artists.length} · En attente : {pending.length} ·
-        Approuvées : {approved.length} · Refusées : {rejected.length}
-      </p>
+        <button className="admin-refresh" onClick={loadData}>
+          ↻ Actualiser
+        </button>
+      </header>
 
-      {error && <div className="notice">{error}</div>}
-      {notice && <div className="notice">{notice}</div>}
+      {error && <div className="admin-alert error">{error}</div>}
+      {notice && <div className="admin-alert success">{notice}</div>}
 
-      <h2>En attente ({pending.length})</h2>
-      {pending.length === 0 ? (
-        <p className="muted">Aucune musique en attente.</p>
-      ) : (
-        <ul>{pending.map(renderTrack)}</ul>
-      )}
+      <section className="admin-stats">
 
-      <h2>Approuvées ({approved.length})</h2>
-      {approved.length === 0 ? (
-        <p className="muted">Aucune musique approuvée.</p>
-      ) : (
-        <ul>{approved.map(renderTrack)}</ul>
-      )}
+        <div className="admin-stat">
+          <span>Artistes inscrits</span>
+          <strong>{artists.length}</strong>
+        </div>
 
-      <h2>Refusées ({rejected.length})</h2>
-      {rejected.length === 0 ? (
-        <p className="muted">Aucune musique refusée.</p>
-      ) : (
-        <ul>{rejected.map(renderTrack)}</ul>
-      )}
-    </section>
+        <div className="admin-stat">
+          <span>Titres reçus</span>
+          <strong>{tracks.length}</strong>
+        </div>
+
+        <div className="admin-stat waiting">
+          <span>En attente</span>
+          <strong>{pending.length}</strong>
+        </div>
+
+        <div className="admin-stat accepted">
+          <span>Approuvées</span>
+          <strong>{approved.length}</strong>
+        </div>
+
+        <div className="admin-stat refused">
+          <span>Refusées</span>
+          <strong>{rejected.length}</strong>
+        </div>
+
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Musique en attente</h2>
+          <span>{pending.length}</span>
+        </div>
+
+        {pending.length === 0 ? (
+          <p className="admin-empty">Aucune musique en attente.</p>
+        ) : (
+          pending.map(renderTrack)
+        )}
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Musiques approuvées</h2>
+          <span>{approved.length}</span>
+        </div>
+
+        {approved.length === 0 ? (
+          <p className="admin-empty">Aucune musique approuvée.</p>
+        ) : (
+          approved.map(renderTrack)
+        )}
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Musiques refusées</h2>
+          <span>{rejected.length}</span>
+        </div>
+
+        {rejected.length === 0 ? (
+          <p className="admin-empty">Aucune musique refusée.</p>
+        ) : (
+          rejected.map(renderTrack)
+        )}
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Artistes inscrits</h2>
+          <span>{artists.length}</span>
+        </div>
+
+        {artists.length === 0 ? (
+          <p className="admin-empty">Aucun artiste inscrit.</p>
+        ) : (
+          artists.map((artist) => (
+            <article className="admin-artist-card" key={artist.id}>
+              <div className="admin-avatar">
+                {(artist.artist_name || artist.full_name || "A")
+                  .charAt(0)
+                  .toUpperCase()}
+              </div>
+
+              <div>
+                <strong>
+                  {artist.artist_name ||
+                    artist.full_name ||
+                    artist.username ||
+                    "Artiste"}
+                </strong>
+                <p>{artist.email || "Adresse non disponible"}</p>
+              </div>
+            </article>
+          ))
+        )}
+      </section>
+
+      <footer className="admin-footer">
+        SOUND-B © 2026 — DMP Creator Production
+      </footer>
+
+    </main>
   );
 }
