@@ -61,10 +61,50 @@ export default function Login() {
         nav("/artiste/tableau-de-bord", { replace: true });
       } else {
         await supabase.auth.signOut();
-        throw new Error(
-          "Votre compte ne possède pas de rôle autorisé."
-        );
+        throw new Error("Votre compte ne possède pas de rôle autorisé.");
       }
-
     } catch (error) {
       setMessage(error.message || "Une erreur est survenue");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="page">
+      <h1>Connexion</h1>
+
+      <form onSubmit={submit}>
+        <label>
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </label>
+
+        <label>
+          Mot de passe
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </label>
+
+        <button type="submit" disabled={busy}>
+          {busy ? "Connexion..." : "Se connecter"}
+        </button>
+      </form>
+
+      {message && <p>{message}</p>}
+
+      <p>
+        Pas encore de compte ? <Link to="/inscription">Créer un compte</Link>
+      </p>
+    </div>
+  );
+}
