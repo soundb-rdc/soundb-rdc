@@ -11,6 +11,7 @@ import EditArtistProfile from "./pages/EditArtistProfile";
 import UploadTrack from "./pages/UploadTrack";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
+import Artists from "./pages/Artists";
 
 export default function App() {
   return (
