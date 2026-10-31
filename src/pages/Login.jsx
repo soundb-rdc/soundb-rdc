@@ -67,4 +67,4 @@ export default function Login() {
       }
 
     } catch (error) {
-      setMessage(error.message || "
+      setMessage(error.message || "Une erreur est survenue");
