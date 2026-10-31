@@ -38,14 +38,8 @@ export default function AdminDashboard() {
       }
 
       const [artistsResult, tracksResult] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("role", "artist"),
-
-        supabase
-          .from("tracks")
-          .select("*"),
+        supabase.from("profiles").select("*").eq("role", "artist"),
+        supabase.from("tracks").select("*"),
       ]);
 
       if (artistsResult.error) throw artistsResult.error;
@@ -53,7 +47,6 @@ export default function AdminDashboard() {
 
       setArtists(artistsResult.data || []);
       setTracks(tracksResult.data || []);
-
     } catch (err) {
       setError(err.message || "Erreur de chargement.");
     } finally {
@@ -82,9 +75,7 @@ export default function AdminDashboard() {
 
       setTracks((current) =>
         current.map((track) =>
-          track.id === trackId
-            ? { ...track, status }
-            : track
+          track.id === trackId ? { ...track, status } : track
         )
       );
 
@@ -95,7 +86,6 @@ export default function AdminDashboard() {
           ? "Musique refusée."
           : "Musique remise en attente."
       );
-
     } catch (err) {
       setError(err.message || "Impossible de modifier le statut.");
     } finally {
@@ -103,22 +93,12 @@ export default function AdminDashboard() {
     }
   }
 
-  const pending = tracks.filter(
-    (track) => track.status === "pending"
-  );
-
-  const approved = tracks.filter(
-    (track) => track.status === "approved"
-  );
-
-  const rejected = tracks.filter(
-    (track) => track.status === "rejected"
-  );
+  const pending = tracks.filter((track) => track.status === "pending");
+  const approved = tracks.filter((track) => track.status === "approved");
+  const rejected = tracks.filter((track) => track.status === "rejected");
 
   function artistLabel(artistId) {
-    const artist = artists.find(
-      (item) => item.id === artistId
-    );
+    const artist = artists.find((item) => item.id === artistId);
 
     if (!artist) return "Artiste non identifié";
 
@@ -128,6 +108,42 @@ export default function AdminDashboard() {
       artist.username ||
       artist.email ||
       artist.id
+    );
+  }
+
+  function renderTrack(track) {
+    return (
+      <li key={track.id}>
+        <strong>{track.title || "Sans titre"}</strong>
+        <span> — {artistLabel(track.artist_id)}</span>
+
+        <div>
+          {track.status !== "approved" && (
+            <button
+              disabled={busyTrack !== null}
+              onClick={() => changeTrackStatus(track.id, "approved")}
+            >
+              Approuver
+            </button>
+          )}
+          {track.status !== "rejected" && (
+            <button
+              disabled={busyTrack !== null}
+              onClick={() => changeTrackStatus(track.id, "rejected")}
+            >
+              Refuser
+            </button>
+          )}
+          {track.status !== "pending" && (
+            <button
+              disabled={busyTrack !== null}
+              onClick={() => changeTrackStatus(track.id, "pending")}
+            >
+              Remettre en attente
+            </button>
+          )}
+        </div>
+      </li>
     );
   }
 
@@ -141,10 +157,38 @@ export default function AdminDashboard() {
 
   return (
     <section>
-      <p className="eyebrow">
-        DMP CREATOR PRODUCTION
-      </p>
+      <p className="eyebrow">DMP CREATOR PRODUCTION</p>
 
       <h1>Administration SOUND-B</h1>
 
-      <p className="mut
+      <p className="muted">
+        Artistes : {artists.length} · En attente : {pending.length} ·
+        Approuvées : {approved.length} · Refusées : {rejected.length}
+      </p>
+
+      {error && <div className="notice">{error}</div>}
+      {notice && <div className="notice">{notice}</div>}
+
+      <h2>En attente ({pending.length})</h2>
+      {pending.length === 0 ? (
+        <p className="muted">Aucune musique en attente.</p>
+      ) : (
+        <ul>{pending.map(renderTrack)}</ul>
+      )}
+
+      <h2>Approuvées ({approved.length})</h2>
+      {approved.length === 0 ? (
+        <p className="muted">Aucune musique approuvée.</p>
+      ) : (
+        <ul>{approved.map(renderTrack)}</ul>
+      )}
+
+      <h2>Refusées ({rejected.length})</h2>
+      {rejected.length === 0 ? (
+        <p className="muted">Aucune musique refusée.</p>
+      ) : (
+        <ul>{rejected.map(renderTrack)}</ul>
+      )}
+    </section>
+  );
+}
