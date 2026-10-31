@@ -86,6 +86,10 @@ export default function Layout({ children }) {
             Découvrir
           </NavLink>
 
+          <NavLink to="/artistes">
+  Artistes
+</NavLink>
+
           {role === "artist" && (
             <NavLink to="/artiste/tableau-de-bord">
               Espace artiste
