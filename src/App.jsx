@@ -24,6 +24,8 @@ export default function App() {
         <Route path="/connexion" element={<Login />} />
         <Route path="/inscription" element={<Register />} />
 
+        <Route path="/artistes" element={<Artists />} />
+
         <Route
           path="/artiste/tableau-de-bord"
           element={<ArtistDashboard />}
