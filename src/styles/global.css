@@ -43,3 +43,71 @@
     color: #ff7a18;
   }
 }
+.artist-profile {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 22px;
+  margin: 25px 0;
+  background: #1b1b1b;
+  border: 1px solid #303030;
+  border-radius: 16px;
+}
+
+.artist-profile-photo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ff7a18;
+}
+
+.artist-profile h2 {
+  margin: 0 0 8px;
+}
+
+.artist-callout textarea {
+  width: 100%;
+  margin-top: 8px;
+  padding: 13px;
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.music-style-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 15px 0 25px;
+}
+
+.music-style-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+}
+
+.music-style-option input {
+  width: auto;
+  margin: 0;
+  accent-color: #ff7a18;
+}
+
+@media (max-width: 500px) {
+  .artist-profile {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .music-style-list {
+    grid-template-columns: 1fr;
+  }
+}
