@@ -111,3 +111,22 @@
     grid-template-columns: 1fr;
   }
 }
+.logout-btn {
+  padding: 10px 14px;
+  border: 1px solid #ff7a18;
+  border-radius: 8px;
+  background: transparent;
+  color: #ff8a32;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: #ff7a18;
+  color: #151515;
+}
+
+.logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
