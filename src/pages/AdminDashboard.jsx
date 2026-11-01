@@ -401,7 +401,30 @@ window.alert("Nombre de sanctions supprimées : " + data);
 
     return (
       <article className="admin-artist-card" key={artist.id}>
-        <div className="admin-avatar">{name.charAt(0).toUpperCase()}</div>
+        <div className="admin-avatar">
+  {artist.avatar_url ? (
+    <img
+      className="admin-avatar-image"
+      src={
+        supabase.storage
+          .from("avatar")
+          .getPublicUrl(artist.avatar_url).data.publicUrl
+      }
+      alt={`Photo de ${name}`}
+      onError={(event) => {
+        event.currentTarget.style.display = "none";
+        event.currentTarget.nextElementSibling.style.display = "grid";
+      }}
+    />
+  ) : null}
+
+  <span
+    className="admin-avatar-fallback"
+    style={{ display: artist.avatar_url ? "none" : "grid" }}
+  >
+    {name.charAt(0).toUpperCase()}
+  </span>
+</div>
 
         <div className="admin-artist-info">
           <strong>{name}</strong>
