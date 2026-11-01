@@ -5,11 +5,19 @@ import { supabase } from "../lib/supabase";
 export default function ArtistDashboard() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+
   const [stats, setStats] = useState({
     total_plays: 0,
     total_downloads: 0,
     published_tracks: 0
   });
+
+  const [advanced, setAdvanced] = useState({
+    top_tracks: [],
+    daily_plays: [],
+    recent_downloads: []
+  });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,26 +43,45 @@ export default function ArtistDashboard() {
 
       setUser(auth.user);
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", auth.user.id)
-        .maybeSingle();
+      const { data: profileData, error: profileError } =
+        await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", auth.user.id)
+          .maybeSingle();
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
-      setProfile(data);
+      setProfile(profileData);
 
+      // Statistiques générales
       const { data: statistics, error: statsError } =
         await supabase.rpc("get_artist_statistics");
 
       if (statsError) throw statsError;
 
-      if (Array.isArray(statistics) && statistics.length > 0) {
-        setStats(statistics[0]);
-      } else if (statistics && !Array.isArray(statistics)) {
-        setStats(statistics);
+      const basicStats = Array.isArray(statistics)
+        ? statistics[0]
+        : statistics;
+
+      if (basicStats) {
+        setStats(basicStats);
       }
+
+      // Statistiques avancées
+      const { data: advancedData, error: advancedError } =
+        await supabase.rpc("get_artist_advanced_statistics");
+
+      if (advancedError) throw advancedError;
+
+      if (advancedData) {
+        setAdvanced({
+          top_tracks: advancedData.top_tracks || [],
+          daily_plays: advancedData.daily_plays || [],
+          recent_downloads: advancedData.recent_downloads || []
+        });
+      }
+
     } catch (error) {
       console.error("Erreur tableau de bord SOUND-B :", error);
     } finally {
@@ -77,11 +104,19 @@ export default function ArtistDashboard() {
     );
   }
 
+  const maxPlays = Math.max(
+    1,
+    ...advanced.daily_plays.map(day => Number(day.total))
+  );
+
   return (
     <section className="page">
+
       <p className="eyebrow">ESPACE PERSONNEL</p>
 
       <h1>Tableau de bord artiste</h1>
+
+      {/* PROFIL ARTISTE */}
 
       <div className="artist-profile">
         <img
@@ -121,22 +156,177 @@ export default function ArtistDashboard() {
         </Link>
       </div>
 
+      {/* STATISTIQUES GÉNÉRALES */}
+
+      <h2>Mes performances</h2>
+
       <div className="dashboard-grid">
+
         <div className="stat">
-          <b>{Number(stats.total_plays).toLocaleString("fr-FR")}</b>
+          <b>
+            {Number(stats.total_plays || 0).toLocaleString("fr-FR")}
+          </b>
           <span>Écoutes</span>
         </div>
 
         <div className="stat">
-          <b>{Number(stats.total_downloads).toLocaleString("fr-FR")}</b>
+          <b>
+            {Number(stats.total_downloads || 0).toLocaleString("fr-FR")}
+          </b>
           <span>Téléchargements</span>
         </div>
 
         <div className="stat">
-          <b>{Number(stats.published_tracks).toLocaleString("fr-FR")}</b>
+          <b>
+            {Number(stats.published_tracks || 0).toLocaleString("fr-FR")}
+          </b>
           <span>Titres publiés</span>
         </div>
+
       </div>
+
+      {/* GRAPHIQUE DES ÉCOUTES */}
+
+      <div className="form-card" style={{ marginTop: "25px" }}>
+
+        <h2>📊 Évolution des écoutes</h2>
+
+        <p className="muted">
+          Activité des 7 derniers jours
+        </p>
+
+        {advanced.daily_plays.length > 0 ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-around",
+              gap: "10px",
+              height: "190px",
+              paddingTop: "20px"
+            }}
+          >
+            {advanced.daily_plays.map((day, index) => {
+              const value = Number(day.total || 0);
+              const height = (value / maxPlays) * 130;
+
+              return (
+                <div
+                  key={index}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    height: "100%",
+                    gap: "7px"
+                  }}
+                >
+                  <small>{value}</small>
+
+                  <div
+                    style={{
+                      width: "100%",
+                      maxWidth: "35px",
+                      height: `${Math.max(height, 4)}px`,
+                      background: "#ff8a32",
+                      borderRadius: "6px 6px 0 0"
+                    }}
+                  />
+
+                  <small className="muted">
+                    {new Date(day.day + "T12:00:00").toLocaleDateString(
+                      "fr-FR",
+                      { day: "2-digit", month: "2-digit" }
+                    )}
+                  </small>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="muted">Aucune donnée disponible.</p>
+        )}
+
+      </div>
+
+      {/* TOP 5 DES CHANSONS */}
+
+      <div className="form-card" style={{ marginTop: "25px" }}>
+
+        <h2>🏆 Mes titres les plus écoutés</h2>
+
+        {advanced.top_tracks.length > 0 ? (
+          <div>
+            {advanced.top_tracks.map((track, index) => (
+              <div
+                key={track.track_id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "14px 0",
+                  borderBottom: "1px solid rgba(255,255,255,0.1)"
+                }}
+              >
+                <div>
+                  <strong>
+                    {index + 1}. {track.title}
+                  </strong>
+
+                  <p className="muted" style={{ margin: "5px 0 0" }}>
+                    🎧 {Number(track.plays)} écoutes
+                  </p>
+                </div>
+
+                <span>
+                  ⬇️ {Number(track.downloads)}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">
+            Aucun titre publié pour le moment.
+          </p>
+        )}
+
+      </div>
+
+      {/* TÉLÉCHARGEMENTS RÉCENTS */}
+
+      <div className="form-card" style={{ marginTop: "25px" }}>
+
+        <h2>⬇️ Téléchargements récents</h2>
+
+        {advanced.recent_downloads.length > 0 ? (
+          <div>
+            {advanced.recent_downloads.map((item, index) => (
+              <div
+                key={index}
+                style={{
+                  padding: "12px 0",
+                  borderBottom: "1px solid rgba(255,255,255,0.1)"
+                }}
+              >
+                <strong>{item.title}</strong>
+
+                <p className="muted" style={{ margin: "5px 0 0" }}>
+                  {new Date(item.downloaded_at).toLocaleString("fr-FR")}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">
+            Aucun téléchargement enregistré.
+          </p>
+        )}
+
+      </div>
+
     </section>
   );
 }
