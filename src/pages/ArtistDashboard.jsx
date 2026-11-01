@@ -168,7 +168,73 @@ useEffect(() => {
       alert("Impossible de marquer les notifications comme lues.");
     }
   }
+async function loadArtistMessages(userId) {
+  if (!supabase || !userId) return;
 
+  setMessageLoading(true);
+  setMessageError("");
+
+  try {
+    const { data, error } = await supabase
+      .from("artist_messages")
+      .select("*")
+      .eq("artist_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    setArtistMessages(data || []);
+  } catch (error) {
+    setMessageError(error.message || "Impossible de charger les messages.");
+  } finally {
+    setMessageLoading(false);
+  }
+}
+
+  async function sendArtistMessage(event) {
+  event.preventDefault();
+
+  if (!supabase || !user) return;
+
+  const subject = messageSubject.trim();
+  const message = messageBody.trim();
+
+  if (!subject || !message) {
+    setMessageError("Veuillez remplir tous les champs.");
+    return;
+  }
+
+  if (subject.length > 120 || message.length > 3000) {
+    setMessageError("Le sujet ou le message est trop long.");
+    return;
+  }
+
+  setMessageSending(true);
+  setMessageError("");
+  setMessageSuccess("");
+
+  try {
+    const { error } = await supabase
+      .from("artist_messages")
+      .insert({
+        artist_id: user.id,
+        subject,
+        message
+      });
+
+    if (error) throw error;
+
+    setMessageSubject("");
+    setMessageBody("");
+    setMessageSuccess("Votre message a été envoyé à l'administration.");
+
+    await loadArtistMessages(user.id);
+  } catch (error) {
+    setMessageError(error.message || "Impossible d'envoyer le message.");
+  } finally {
+    setMessageSending(false);
+  }
+  }
   async function loadProfile() {
     if (!supabase) {
       setLoading(false);
@@ -201,6 +267,7 @@ useEffect(() => {
 
       // Chargement des notifications
       await loadNotifications(auth.user.id);
+      await loadArtistMessages(auth.user.id);
 
       // Statistiques générales
       const { data: statistics, error: statsError } =
@@ -456,7 +523,160 @@ useEffect(() => {
           </div>
         )}
       </div>
+{/* MESSAGERIE AVEC L'ADMINISTRATION */}
 
+<div className="form-card" style={{ margin: "25px 0" }}>
+  <div style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "12px",
+    flexWrap: "wrap"
+  }}>
+    <h2>✉️ Contacter l'administration</h2>
+
+    <button
+      type="button"
+      className="btn primary"
+      onClick={() => setShowContact(!showContact)}
+    >
+      {showContact ? "Fermer" : "Écrire un message"}
+    </button>
+  </div>
+
+  {showContact && (
+    <form onSubmit={sendArtistMessage} style={{ marginTop: "18px" }}>
+      <label>Sujet du message</label>
+      <input
+        type="text"
+        value={messageSubject}
+        onChange={e => setMessageSubject(e.target.value)}
+        placeholder="Ex. : Problème avec mon compte"
+        maxLength={120}
+        required
+        style={{ width: "100%", margin: "8px 0 15px" }}
+      />
+
+      <label>Votre message</label>
+      <textarea
+        value={messageBody}
+        onChange={e => setMessageBody(e.target.value)}
+        placeholder="Décrivez votre problème ou votre préoccupation..."
+        maxLength={3000}
+        rows={5}
+        required
+        style={{ width: "100%", margin: "8px 0 15px" }}
+      />
+
+      <button
+        type="submit"
+        className="btn primary"
+        disabled={messageSending}
+      >
+        {messageSending ? "Envoi en cours..." : "📨 Envoyer à l'administration"}
+      </button>
+    </form>
+  )}
+
+  {messageError && (
+    <p style={{ color: "#ff7777", marginTop: "12px" }}>
+      {messageError}
+    </p>
+  )}
+
+  {messageSuccess && (
+    <p style={{ color: "#19c37d", marginTop: "12px" }}>
+      {messageSuccess}
+    </p>
+  )}
+
+  <hr style={{ margin: "22px 0", opacity: 0.2 }} />
+
+  <div style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: "10px"
+  }}>
+    <h3>📬 Mes messages</h3>
+
+    <button
+      type="button"
+      className="btn secondary"
+      onClick={() => loadArtistMessages(user.id)}
+      disabled={messageLoading}
+    >
+      {messageLoading ? "Chargement..." : "↻ Actualiser"}
+    </button>
+  </div>
+
+  {messageLoading && artistMessages.length === 0 ? (
+    <p className="muted">Chargement des messages...</p>
+  ) : artistMessages.length === 0 ? (
+    <p className="muted">
+      Vous n'avez encore envoyé aucun message.
+    </p>
+  ) : (
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: "14px",
+      marginTop: "15px"
+    }}>
+      {artistMessages.map(item => (
+        <article
+          key={item.id}
+          style={{
+            padding: "15px",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.03)"
+          }}
+        >
+          <strong>{item.subject}</strong>
+
+          <p style={{ lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
+            {item.message}
+          </p>
+
+          <small className="muted">
+            Envoyé le {new Date(item.created_at).toLocaleString("fr-FR")}
+          </small>
+
+          <p style={{
+            color: item.status === "replied" ? "#19c37d" : "#f0b84b",
+            fontWeight: "700",
+            marginTop: "10px"
+          }}>
+            {item.status === "replied"
+              ? "✅ Réponse de l'administration"
+              : "⏳ En attente de réponse"}
+          </p>
+
+          {item.admin_reply && (
+            <div style={{
+              padding: "12px",
+              borderRadius: "8px",
+              background: "rgba(25,195,125,0.08)",
+              marginTop: "10px"
+            }}>
+              <p style={{ whiteSpace: "pre-wrap", lineHeight: "1.6" }}>
+                {item.admin_reply}
+              </p>
+
+              {item.replied_at && (
+                <small className="muted">
+                  Répondu le {new Date(item.replied_at).toLocaleString("fr-FR")}
+                </small>
+              )}
+            </div>
+          )}
+        </article>
+      ))}
+    </div>
+  )}
+</div>
       {/* NOTIFICATION DE VALIDATION DU PROFIL */}
 
       {profile?.validation_status === "pending" && (
