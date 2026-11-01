@@ -25,6 +25,13 @@ export default function EditArtistProfile() {
 
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+const [city, setCity] = useState("");
+const [facebook, setFacebook] = useState("");
+const [instagram, setInstagram] = useState("");
+const [tiktok, setTiktok] = useState("");
+const [youtube, setYoutube] = useState("");
+const [spotify, setSpotify] = useState("");
   const [styles, setStyles] = useState([]);
   const [photo, setPhoto] = useState(null);
 
@@ -68,7 +75,15 @@ export default function EditArtistProfile() {
         ""
       );
       setBio(data.bio || "");
-      setStyles(data.music_styles || []);
+setStyles(data.music_styles || []);
+
+setWhatsapp(data.whatsapp_number || "");
+setCity(data.city || "");
+setFacebook(data.facebook_url || "");
+setInstagram(data.instagram_url || "");
+setTiktok(data.tiktok_url || "");
+setYoutube(data.youtube_url || "");
+setSpotify(data.spotify_url || "");
     }
 
     setLoading(false);
@@ -117,11 +132,19 @@ export default function EditArtistProfile() {
       const { data, error } = await supabase
         .from("profiles")
         .update({
-          artist_name: name,
-          bio: bio,
-          music_styles: styles,
-          avatar_url: avatarUrl,
-        })
+  artist_name: name,
+  bio: bio,
+  music_styles: styles,
+  avatar_url: avatarUrl,
+
+  whatsapp_number: whatsapp.trim(),
+  city: city.trim(),
+  facebook_url: facebook.trim(),
+  instagram_url: instagram.trim(),
+  tiktok_url: tiktok.trim(),
+  youtube_url: youtube.trim(),
+  spotify_url: spotify.trim(),
+})
         .eq("id", user.id)
         .select()
         .single();
@@ -223,7 +246,84 @@ export default function EditArtistProfile() {
               placeholder="Présentez votre parcours et votre musique..."
             />
           </label>
+<div className="artist-contact-fields">
 
+  <h2>Informations supplémentaires</h2>
+
+  <label>
+    Numéro WhatsApp
+    <input
+      type="tel"
+      value={whatsapp}
+      onChange={(e) => setWhatsapp(e.target.value)}
+      placeholder="+243 82 000 00 00"
+    />
+  </label>
+
+  <label>
+    Ville de résidence
+    <input
+      type="text"
+      value={city}
+      onChange={(e) => setCity(e.target.value)}
+      placeholder="Ex : Bandundu, Kinshasa..."
+    />
+  </label>
+
+  <h3>Mes réseaux sociaux</h3>
+  <p className="muted">Tous ces champs sont facultatifs.</p>
+
+  <label>
+    Facebook
+    <input
+      type="url"
+      value={facebook}
+      onChange={(e) => setFacebook(e.target.value)}
+      placeholder="https://facebook.com/..."
+    />
+  </label>
+
+  <label>
+    Instagram
+    <input
+      type="url"
+      value={instagram}
+      onChange={(e) => setInstagram(e.target.value)}
+      placeholder="https://instagram.com/..."
+    />
+  </label>
+
+  <label>
+    TikTok
+    <input
+      type="url"
+      value={tiktok}
+      onChange={(e) => setTiktok(e.target.value)}
+      placeholder="https://tiktok.com/@..."
+    />
+  </label>
+
+  <label>
+    YouTube
+    <input
+      type="url"
+      value={youtube}
+      onChange={(e) => setYoutube(e.target.value)}
+      placeholder="https://youtube.com/..."
+    />
+  </label>
+
+  <label>
+    Spotify
+    <input
+      type="url"
+      value={spotify}
+      onChange={(e) => setSpotify(e.target.value)}
+      placeholder="https://open.spotify.com/..."
+    />
+  </label>
+
+</div>
           <p>
             <strong>Styles musicaux</strong>
           </p>
