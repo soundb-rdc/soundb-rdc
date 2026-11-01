@@ -100,6 +100,64 @@ if (messagesResult.error) throw messagesResult.error;
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  async function replyToArtistMessage(message) {
+  if (!supabase || messageBusy !== null) return;
+
+  const reply = (replyDrafts[message.id] || "").trim();
+
+  if (!reply) {
+    setError("Veuillez saisir une réponse avant de l'envoyer.");
+    return;
+  }
+
+  setMessageBusy(message.id);
+  setError("");
+  setNotice("");
+
+  try {
+    const { data: auth, error: authError } =
+      await supabase.auth.getUser();
+
+    if (authError) throw authError;
+    if (!auth.user) throw new Error("Session administrateur introuvable.");
+
+    const { data, error: updateError } = await supabase
+      .from("artist_messages")
+      .update({
+        admin_reply: reply,
+        status: "replied",
+        handled_by: auth.user.id,
+        replied_at: new Date().toISOString()
+      })
+      .eq("id", message.id)
+      .select()
+      .maybeSingle();
+
+    if (updateError) throw updateError;
+
+    if (!data) {
+      throw new Error("Réponse non enregistrée. Vérifiez les autorisations Supabase.");
+    }
+
+    setArtistMessages(current =>
+      current.map(item =>
+        item.id === message.id ? data : item
+      )
+    );
+
+    setReplyDrafts(current => ({
+      ...current,
+      [message.id]: ""
+    }));
+
+    setNotice("Réponse envoyée avec succès à l'artiste.");
+  } catch (err) {
+    setError(err.message || "Impossible d'envoyer la réponse.");
+  } finally {
+    setMessageBusy(null);
+  }
+  }
 async function clearSuspensionHistory() {
   if (!supabase || historyBusy) return;
 
@@ -592,6 +650,87 @@ window.alert("Nombre de sanctions supprimées : " + data);
 
       {error && <div className="admin-alert error">{error}</div>}
       {notice && <div className="admin-alert success">{notice}</div>}
+      <section className="admin-section">
+  <div className="admin-section-heading">
+    <h2>✉️ Messages des artistes</h2>
+    <span>
+      {artistMessages.filter(item => item.status === "pending").length}
+      {" "}en attente
+    </span>
+  </div>
+
+  {artistMessages.length === 0 ? (
+    <p className="admin-empty">
+      Aucun message reçu pour le moment.
+    </p>
+  ) : (
+    <div className="admin-messages-list">
+      {artistMessages.map(message => (
+        <article className="admin-message-card" key={message.id}>
+          <div className="admin-message-header">
+            <div>
+              <strong>{artistLabel(message.artist_id)}</strong>
+              <p>
+                {new Date(message.created_at).toLocaleString("fr-FR")}
+              </p>
+            </div>
+
+            <span className={`admin-status ${
+              message.status === "replied" ? "approved" : "pending"
+            }`}>
+              {message.status === "replied" ? "Répondu" : "En attente"}
+            </span>
+          </div>
+
+          <h3>{message.subject}</h3>
+
+          <p className="admin-message-content">
+            {message.message}
+          </p>
+
+          {message.admin_reply && (
+            <div className="admin-message-reply">
+              <strong>Votre réponse :</strong>
+              <p>{message.admin_reply}</p>
+              {message.replied_at && (
+                <small>
+                  Répondu le :{" "}
+                  {new Date(message.replied_at).toLocaleString("fr-FR")}
+                </small>
+              )}
+            </div>
+          )}
+
+          <textarea
+            value={replyDrafts[message.id] || ""}
+            onChange={event =>
+              setReplyDrafts(current => ({
+                ...current,
+                [message.id]: event.target.value
+              }))
+            }
+            placeholder="Écrivez votre réponse à cet artiste..."
+            rows={4}
+            maxLength={3000}
+          />
+
+          <button
+            className="admin-btn approve"
+            type="button"
+            disabled={messageBusy !== null}
+            onClick={() => replyToArtistMessage(message)}
+          >
+            {messageBusy === message.id
+              ? "Envoi..."
+              : message.status === "replied"
+                ? "Modifier la réponse"
+                : "Envoyer la réponse"}
+          </button>
+        </article>
+      ))}
+    </div>
+  )}
+</section>
 
       <section className="admin-stats">
         <div className="admin-stat">
