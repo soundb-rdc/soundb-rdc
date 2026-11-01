@@ -237,6 +237,76 @@ const [trackArtistFilter, setTrackArtistFilter] = useState("all");
       </article>
     );
   }
+  async function deleteTrack(track) {
+  if (!supabase || busyItem !== null) return;
+
+  const confirmed = window.confirm(
+    `Voulez-vous vraiment supprimer définitivement le morceau "${track.title}" ?\n\nCette action supprimera également ses statistiques.`
+  );
+
+  if (!confirmed) return;
+
+  setBusyItem(track.id);
+  setError("");
+  setNotice("");
+
+  try {
+    // Supprimer d'abord l'enregistrement du morceau.
+    // Les statistiques associées seront supprimées automatiquement.
+    const { data, error: deleteError } = await supabase
+      .from("tracks")
+      .delete()
+      .eq("id", track.id)
+      .select("id")
+      .maybeSingle();
+
+    if (deleteError) throw deleteError;
+
+    if (!data) {
+      throw new Error(
+        "Suppression impossible. Vérifie les autorisations Supabase."
+      );
+    }
+
+    // Supprimer les fichiers du stockage.
+    const audioPath = track.audio_path;
+    const coverPath = track.cover_path;
+
+    const audioResult = audioPath
+      ? await supabase.storage
+          .from("music-files")
+          .remove([audioPath])
+      : { error: null };
+
+    const coverResult = coverPath
+      ? await supabase.storage
+          .from("music-covers")
+          .remove([coverPath])
+      : { error: null };
+
+    setTracks((current) =>
+      current.filter((item) => item.id !== track.id)
+    );
+
+    setPreviewUrls((current) => {
+      const updated = { ...current };
+      delete updated[track.id];
+      return updated;
+    });
+
+    if (audioResult.error || coverResult.error) {
+      setNotice(
+        "Morceau supprimé, mais certains fichiers n'ont pas pu être supprimés du stockage."
+      );
+    } else {
+      setNotice("Morceau et fichiers supprimés avec succès.");
+    }
+  } catch (err) {
+    setError(err.message || "Erreur lors de la suppression.");
+  } finally {
+    setBusyItem(null);
+  }
+}
 async function previewTrack(track) {
   if (!track.audio_path) {
     setError("Aucun fichier audio associé à ce morceau.");
@@ -324,6 +394,13 @@ async function previewTrack(track) {
             >
               Remettre en attente
             </button>
+        <button
+  className="admin-btn delete"
+  disabled={busyItem !== null}
+  onClick={() => deleteTrack(track)}
+>
+  🗑 Supprimer
+</button>
           )}
         </div>
       </article>
