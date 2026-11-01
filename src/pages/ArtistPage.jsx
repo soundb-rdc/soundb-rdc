@@ -28,7 +28,20 @@ export default function ArtistPage() {
     try {
       const { data: artistData, error: artistError } = await supabase
         .from("profiles")
-        .select("id, artist_name, avatar_url, music_styles")
+        .select(`
+  id,
+  artist_name,
+  avatar_url,
+  music_styles,
+  bio,
+  whatsapp_number,
+  city,
+  facebook_url,
+  instagram_url,
+  tiktok_url,
+  youtube_url,
+  spotify_url
+`)
         .eq("id", id)
         .eq("role", "artist")
         .maybeSingle();
@@ -108,6 +121,78 @@ export default function ArtistPage() {
               : "Style musical non renseigné"}
           </p>
         </div>
+
+      </div>
+            {/* INFORMATIONS ET CONTACT DE L'ARTISTE */}
+      <div className="artist-extra-info">
+
+        {artist.bio && (
+          <div>
+            <h2>À propos de l'artiste</h2>
+            <p>{artist.bio}</p>
+          </div>
+        )}
+
+        {artist.city && (
+          <p>📍 Ville de résidence : {artist.city}</p>
+        )}
+
+        {artist.whatsapp_number && (
+          <p>
+            <a
+              href={`https://wa.me/${artist.whatsapp_number.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              💬 Contacter sur WhatsApp
+            </a>
+          </p>
+        )}
+
+        {(artist.facebook_url ||
+          artist.instagram_url ||
+          artist.tiktok_url ||
+          artist.youtube_url ||
+          artist.spotify_url) && (
+
+          <div>
+            <h2>Réseaux sociaux</h2>
+
+            <div className="artist-social-links">
+
+              {artist.facebook_url && (
+                <a href={artist.facebook_url} target="_blank" rel="noopener noreferrer">
+                  Facebook
+                </a>
+              )}
+
+              {artist.instagram_url && (
+                <a href={artist.instagram_url} target="_blank" rel="noopener noreferrer">
+                  Instagram
+                </a>
+              )}
+
+              {artist.tiktok_url && (
+                <a href={artist.tiktok_url} target="_blank" rel="noopener noreferrer">
+                  TikTok
+                </a>
+              )}
+
+              {artist.youtube_url && (
+                <a href={artist.youtube_url} target="_blank" rel="noopener noreferrer">
+                  YouTube
+                </a>
+              )}
+
+              {artist.spotify_url && (
+                <a href={artist.spotify_url} target="_blank" rel="noopener noreferrer">
+                  Spotify
+                </a>
+              )}
+
+            </div>
+          </div>
+        )}
 
       </div>
 
