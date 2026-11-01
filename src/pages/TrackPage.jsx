@@ -16,13 +16,10 @@ export default function TrackPage() {
     let active = true;
 
     async function loadTrack() {
-      if (!supabase) {
-        setError("Connexion à Supabase impossible.");
-        setLoading(false);
-        return;
-      }
-
       try {
+        setLoading(true);
+        setError("");
+
         const { data, error: trackError } = await supabase
           .from("tracks")
           .select("*")
@@ -32,62 +29,79 @@ export default function TrackPage() {
 
         if (trackError) throw trackError;
 
+        if (!data.audio_path) {
+          throw new Error("Aucun fichier audio associé à ce morceau.");
+        }
+
+        if (active) setTrack(data);
+
+        // Récupération du fichier audio
         const { data: audioData, error: audioError } =
           await supabase.storage
             .from("music-files")
             .createSignedUrl(data.audio_path, 3600);
 
-        if (audioError) throw audioError;
+        if (audioError) {
+          throw new Error(
+            "Erreur de lecture audio : " + audioError.message
+          );
+        }
 
-        let imageUrl = "";
+        if (active) setAudioUrl(audioData.signedUrl);
 
+        // Récupération facultative de la pochette
         if (data.cover_path) {
           const { data: coverData, error: coverError } =
             await supabase.storage
               .from("music-covers")
               .createSignedUrl(data.cover_path, 3600);
 
-          if (coverError) throw coverError;
-
-          imageUrl = coverData.signedUrl;
+          if (!coverError && active) {
+            setCoverUrl(coverData.signedUrl);
+          }
         }
 
+        // Profil de l'artiste
         const { data: artistData } = await supabase
           .from("profiles")
           .select("artist_name, avatar_url")
           .eq("id", data.artist_id)
           .maybeSingle();
 
-        if (!active) return;
-
-        setTrack(data);
-        setArtist(artistData);
-        setAudioUrl(audioData.signedUrl);
-        setCoverUrl(imageUrl);
+        if (active) setArtist(artistData);
 
       } catch (err) {
-        if (active) setError(err.message);
+        console.error("Erreur SOUND-B :", err);
+
+        if (active) {
+          setError(err.message);
+        }
       } finally {
         if (active) setLoading(false);
       }
     }
 
-    loadTrack();
+    if (supabase) {
+      loadTrack();
+    } else {
+      setError("Connexion à Supabase impossible.");
+      setLoading(false);
+    }
 
     return () => {
       active = false;
     };
   }, [id]);
 
-  if (loading) return <p>Chargement du titre...</p>;
+  if (loading) {
+    return <p>Chargement du titre...</p>;
+  }
 
-  if (error || !track) {
+  if (error) {
     return (
       <section className="form-card">
         <h2>Titre indisponible</h2>
-        <p className="notice">
-          {error || "Ce titre est introuvable ou n'est pas encore approuvé."}
-        </p>
+        <p className="notice">{error}</p>
         <Link className="btn secondary" to="/recherche">
           Retour au catalogue
         </Link>
@@ -95,8 +109,13 @@ export default function TrackPage() {
     );
   }
 
+  if (!track) {
+    return <p>Titre introuvable.</p>;
+  }
+
   return (
     <section className="detail-card">
+
       {coverUrl ? (
         <img
           src={coverUrl}
@@ -128,8 +147,6 @@ export default function TrackPage() {
         href={audioUrl}
         download={`${track.title}.mp3`}
         className="btn primary"
-        target="_blank"
-        rel="noreferrer"
       >
         Télécharger la chanson
       </a>
@@ -142,6 +159,7 @@ export default function TrackPage() {
       >
         Voir le profil artiste
       </Link>
+
     </section>
   );
 }
