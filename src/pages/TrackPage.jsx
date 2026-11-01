@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-
+function cleanFileName(value) {
+  return String(value || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_");
+}
 export default function TrackPage() {
   const { id } = useParams();
 
@@ -31,7 +37,44 @@ export default function TrackPage() {
       console.error("Impossible d'enregistrer l'événement :", err);
     }
   }
+async function downloadTrack() {
+  try {
+    const response = await fetch(audioUrl);
 
+    if (!response.ok) {
+      throw new Error("Téléchargement impossible.");
+    }
+
+    const blob = await response.blob();
+    const fileUrl = URL.createObjectURL(blob);
+
+    const title = cleanFileName(track.title);
+    const artistName = cleanFileName(
+      artist?.artist_name || "Artiste_SOUND_B"
+    );
+    const year = track.production_year || new Date().getFullYear();
+
+    const extension = track.audio_path.split(".").pop() || "mp3";
+
+    const fileName =
+      `${title}_${artistName}_Audio_Officiel_${year}.${extension}`;
+
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = fileName;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(fileUrl);
+
+    recordEvent("download", track.id);
+  } catch (err) {
+    console.error("Erreur de téléchargement :", err);
+    alert("Impossible de télécharger cette chanson. Réessaie.");
+  }
+  }
   useEffect(() => {
     let active = true;
 
@@ -157,14 +200,14 @@ export default function TrackPage() {
         Ton navigateur ne prend pas en charge la lecture audio.
       </audio>
 
-      <a
-        href={audioUrl}
-        download={`${track.title}.mp3`}
-        className="btn primary"
-        onClick={() => recordEvent("download", track.id)}
-      >
-        Télécharger la chanson
-      </a>
+      <button
+  type="button"
+  className="btn primary"
+  onClick={downloadTrack}
+>
+  Télécharger la chanson
+</button>
+      
 
       <br />
 
