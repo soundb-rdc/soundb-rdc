@@ -10,6 +10,9 @@ export default function AdminDashboard() {
   const [tracks, setTracks] = useState([]);
   const [busyItem, setBusyItem] = useState(null);
 const [previewUrls, setPreviewUrls] = useState({});
+  const [trackSearch, setTrackSearch] = useState("");
+const [trackStatusFilter, setTrackStatusFilter] = useState("all");
+const [trackArtistFilter, setTrackArtistFilter] = useState("all");
   const loadData = useCallback(async () => {
     if (!supabase) {
       setError("Connexion Supabase non configurée.");
@@ -156,6 +159,24 @@ const [previewUrls, setPreviewUrls] = useState({});
   const pendingTracks = tracks.filter((track) => track.status === "pending");
   const approvedTracks = tracks.filter((track) => track.status === "approved");
   const rejectedTracks = tracks.filter((track) => track.status === "rejected");
+  const filteredTracks = tracks.filter((track) => {
+  const artistName = artistLabel(track.artist_id).toLowerCase();
+  const title = (track.title || "").toLowerCase();
+  const search = trackSearch.toLowerCase();
+
+  const matchesSearch =
+    title.includes(search) || artistName.includes(search);
+
+  const matchesStatus =
+    trackStatusFilter === "all" ||
+    track.status === trackStatusFilter;
+
+  const matchesArtist =
+    trackArtistFilter === "all" ||
+    track.artist_id === trackArtistFilter;
+
+  return matchesSearch && matchesStatus && matchesArtist;
+});
 
   function artistLabel(artistId) {
     const artist = artists.find((item) => item.id === artistId);
@@ -394,7 +415,54 @@ async function previewTrack(track) {
           ? <p className="admin-empty">Aucun artiste refusé.</p>
           : rejectedArtists.map(renderArtist)}
       </section>
+<section className="admin-section">
+  <div className="admin-section-heading">
+    <h2>Recherche et filtres musicaux</h2>
+  </div>
 
+  <input
+    type="search"
+    placeholder="Rechercher un titre ou un artiste..."
+    value={trackSearch}
+    onChange={(e) => setTrackSearch(e.target.value)}
+    className="admin-search"
+  />
+
+  <div className="admin-filters">
+    <select
+      value={trackStatusFilter}
+      onChange={(e) => setTrackStatusFilter(e.target.value)}
+    >
+      <option value="all">Tous les statuts</option>
+      <option value="pending">En attente</option>
+      <option value="approved">Approuvées</option>
+      <option value="rejected">Refusées</option>
+    </select>
+
+    <select
+      value={trackArtistFilter}
+      onChange={(e) => setTrackArtistFilter(e.target.value)}
+    >
+      <option value="all">Tous les artistes</option>
+
+      {artists.map((artist) => (
+        <option key={artist.id} value={artist.id}>
+          {artistLabel(artist.id)}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <p className="admin-empty">
+    {filteredTracks.length} morceau(x) trouvé(s).
+  </p>
+
+  {filteredTracks.length === 0 ? (
+    <p className="admin-empty">Aucun morceau correspondant.</p>
+  ) : (
+    filteredTracks.map(renderTrack)
+  )}
+</section>
       <section className="admin-section">
         <div className="admin-section-heading">
           <h2>Musiques en attente</h2>
