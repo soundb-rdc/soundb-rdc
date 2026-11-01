@@ -3,6 +3,10 @@ import { supabase } from "../lib/supabase";
 
 export default function UploadTrack() {
   const [title, setTitle] = useState("");
+  const [productionYear, setProductionYear] = useState("2026");
+  const [productionLabel, setProductionLabel] = useState("");
+  const [releaseType, setReleaseType] = useState("single");
+  const [albumTitle, setAlbumTitle] = useState("");
   const [audio, setAudio] = useState(null);
   const [cover, setCover] = useState(null);
   const [message, setMessage] = useState("");
@@ -22,12 +26,26 @@ export default function UploadTrack() {
     }
 
     if (!audio.type.startsWith("audio/")) {
-      setMessage("Le fichier sélectionné doit être un fichier audio.");
+      setMessage("Le fichier sélectionné doit être audio.");
       return;
     }
 
     if (cover && !cover.type.startsWith("image/")) {
       setMessage("La couverture doit être une image.");
+      return;
+    }
+
+    if (
+      !productionYear ||
+      Number(productionYear) < 1900 ||
+      Number(productionYear) > new Date().getFullYear()
+    ) {
+      setMessage("Année de production invalide.");
+      return;
+    }
+
+    if (releaseType === "album" && !albumTitle.trim()) {
+      setMessage("Indique le nom de l'album.");
       return;
     }
 
@@ -84,10 +102,14 @@ export default function UploadTrack() {
       const { error: insertError } = await supabase
         .from("tracks")
         .insert({
-          title,
+          title: title.trim(),
           artist_id: user.id,
           audio_path: audioPath,
           cover_path: coverPath,
+          production_year: Number(productionYear),
+          production_label: productionLabel.trim(),
+          release_type: releaseType,
+          album_title: releaseType === "album" ? albumTitle.trim() : null,
           status: "pending"
         });
 
@@ -101,9 +123,15 @@ export default function UploadTrack() {
         throw insertError;
       }
 
-      setMessage("Chanson envoyée avec succès ! Elle est en attente de validation.");
+      setMessage(
+        "Chanson envoyée avec succès ! Elle est en attente de validation."
+      );
 
       setTitle("");
+      setProductionYear("2026");
+      setProductionLabel("");
+      setReleaseType("single");
+      setAlbumTitle("");
       setAudio(null);
       setCover(null);
 
@@ -128,8 +156,57 @@ export default function UploadTrack() {
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder="Ex : Légende"
           />
         </label>
+
+        <label>
+          Année de production
+          <input
+            type="number"
+            required
+            min="1900"
+            max={new Date().getFullYear()}
+            value={productionYear}
+            onChange={(e) => setProductionYear(e.target.value)}
+          />
+        </label>
+
+        <label>
+          Label de production
+          <input
+            required
+            value={productionLabel}
+            onChange={(e) => setProductionLabel(e.target.value)}
+            placeholder="Ex : DMP Creator Production"
+          />
+        </label>
+
+        <label>
+          Type de sortie
+          <select
+            value={releaseType}
+            onChange={(e) => {
+              setReleaseType(e.target.value);
+              setAlbumTitle("");
+            }}
+          >
+            <option value="single">Single</option>
+            <option value="album">Album</option>
+          </select>
+        </label>
+
+        {releaseType === "album" && (
+          <label>
+            Nom de l'album
+            <input
+              required
+              value={albumTitle}
+              onChange={(e) => setAlbumTitle(e.target.value)}
+              placeholder="Nom de l'album"
+            />
+          </label>
+        )}
 
         <label>
           Fichier audio (MP3)
