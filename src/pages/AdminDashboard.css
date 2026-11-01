@@ -319,3 +319,75 @@
 .admin-btn.delete:hover {
   background: #c62828;
 }
+/* Historique des sanctions */
+.admin-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-history-card {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(220px, 1.2fr);
+  gap: 18px;
+  padding: 17px;
+  border: 1px solid #303a35;
+  border-radius: 10px;
+  background: #121815;
+}
+
+.admin-history-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.admin-history-main strong {
+  overflow-wrap: anywhere;
+}
+
+.admin-history-main p,
+.admin-history-details p {
+  color: #aaa;
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.admin-history-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+
+.admin-history-details b {
+  color: #e5e5e5;
+}
+
+.admin-history-badge {
+  display: inline-block;
+  border-radius: 20px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-history-badge.suspended {
+  color: #ff9999;
+  background: #482727;
+}
+
+.admin-history-badge.reactivated {
+  color: #75e6ad;
+  background: #193d30;
+}
+
+/* Affichage sur téléphone */
+@media (max-width: 650px) {
+  .admin-history-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
