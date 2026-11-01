@@ -40,25 +40,76 @@ export default function TrackPage() {
   }
 async function downloadTrack() {
   try {
-    const response = await fetch(audioUrl);
-
-    if (!response.ok) {
-      throw new Error("Téléchargement impossible.");
+    if (!audioUrl) {
+      throw new Error("Fichier audio indisponible.");
     }
 
-    const blob = await response.blob();
-    const fileUrl = URL.createObjectURL(blob);
+    if (!coverUrl) {
+      throw new Error("Cette chanson ne possède pas de couverture.");
+    }
+
+    const { ID3Writer } = await import(
+      /* @vite-ignore */
+      "https://esm.sh/browser-id3-writer@6.4.0"
+    );
+
+    const audioResponse = await fetch(audioUrl);
+
+    if (!audioResponse.ok) {
+      throw new Error("Impossible de récupérer la chanson.");
+    }
+
+    const audioBuffer = await audioResponse.arrayBuffer();
+
+    const coverResponse = await fetch(coverUrl);
+
+    if (!coverResponse.ok) {
+      throw new Error("Impossible de récupérer la couverture.");
+    }
+
+    const coverBuffer = await coverResponse.arrayBuffer();
 
     const title = cleanFileName(track.title);
     const artistName = cleanFileName(
       artist?.artist_name || "Artiste_SOUND_B"
     );
+
     const year = track.production_year || new Date().getFullYear();
 
-    const extension = track.audio_path.split(".").pop() || "mp3";
+    const extension = track.audio_path.split(".").pop().toLowerCase();
+
+    if (extension !== "mp3") {
+      throw new Error("Cette fonctionnalité est réservée aux fichiers MP3.");
+    }
+
+    const writer = new ID3Writer(audioBuffer);
+
+    writer
+      .setFrame("TIT2", track.title)
+      .setFrame("TPE1", [artistName])
+      .setFrame("TYER", Number(year));
+
+    if (track.production_label) {
+      writer.setFrame("TPUB", track.production_label);
+    }
+
+    if (track.album_title) {
+      writer.setFrame("TALB", track.album_title);
+    }
+
+    writer.setFrame("APIC", {
+      type: 3,
+      data: coverBuffer,
+      description: "Pochette officielle SOUND-B"
+    });
+
+    writer.addTag();
+
+    const blob = writer.getBlob();
+    const fileUrl = URL.createObjectURL(blob);
 
     const fileName =
-      `${title}_${artistName}_Audio_Officiel_${year}.${extension}`;
+      `${title}_${artistName}_Audio_Officiel_${year}.mp3`;
 
     const link = document.createElement("a");
     link.href = fileUrl;
@@ -68,14 +119,15 @@ async function downloadTrack() {
     link.click();
     document.body.removeChild(link);
 
-    URL.revokeObjectURL(fileUrl);
+    setTimeout(() => URL.revokeObjectURL(fileUrl), 2000);
 
     recordEvent("download", track.id);
+
   } catch (err) {
-    console.error("Erreur de téléchargement :", err);
-    alert("Impossible de télécharger cette chanson. Réessaie.");
+    console.error("Erreur de téléchargement SOUND-B :", err);
+    alert("Téléchargement impossible : " + err.message);
   }
-  }
+}
   useEffect(() => {
     let active = true;
 
