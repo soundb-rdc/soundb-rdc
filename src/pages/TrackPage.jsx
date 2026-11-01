@@ -199,7 +199,35 @@ async function downloadTrack() {
       >
         Ton navigateur ne prend pas en charge la lecture audio.
       </audio>
+<div className="detail-card track-production">
+  <p className="eyebrow">INFORMATIONS DE PRODUCTION</p>
 
+  <div className="production-info">
+    <div>
+      <span>Année de production</span>
+      <strong>{track.production_year || "Non renseignée"}</strong>
+    </div>
+
+    <div>
+      <span>Label de production</span>
+      <strong>{track.production_label || "Indépendant"}</strong>
+    </div>
+
+    <div>
+      <span>Format de sortie</span>
+      <strong>
+        {track.release_type === "album" ? "Album" : "Single"}
+      </strong>
+    </div>
+
+    {track.release_type === "album" && track.album_title && (
+      <div>
+        <span>Nom de l'album</span>
+        <strong>{track.album_title}</strong>
+      </div>
+    )}
+  </div>
+</div>
       <button
   type="button"
   className="btn primary"
