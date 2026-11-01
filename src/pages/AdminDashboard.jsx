@@ -64,42 +64,29 @@ export default function AdminDashboard() {
   }, [loadData]);
 
   async function changeArtistStatus(artistId, validation_status) {
-  if (!supabase || busyItem !== null) return;
+    if (!supabase || busyItem !== null) return;
 
-  setBusyItem(artistId);
-  setError("");
-  setNotice("");
+    setBusyItem(artistId);
+    setError("");
+    setNotice("");
 
-  try {
-    const { data, error: updateError } = await supabase
-      .from("profiles")
-      .update({ validation_status })
-      .eq("id", artistId)
-      .select("id, validation_status")
-      .maybeSingle();
+    try {
+      const { data, error: updateError } = await supabase
+        .from("profiles")
+        .update({ validation_status })
+        .eq("id", artistId)
+        .select("id, validation_status")
+        .maybeSingle();
 
-    if (updateError) throw updateError;
+      if (updateError) throw updateError;
 
-    if (!data) {
-      throw new Error(
-        "Aucune modification effectuée. Vérifie les autorisations UPDATE dans Supabase."
-      );
-    }
+      if (!data) {
+        throw new Error(
+          "Aucune modification effectuée. Vérifie les autorisations UPDATE dans Supabase."
+        );
+      }
 
-    await loadData();
-
-    setNotice(
-      validation_status === "approved"
-        ? "Artiste validé avec succès."
-        : "Demande de l'artiste refusée."
-    );
-
-  } catch (err) {
-    setError(err.message || "Impossible de modifier le statut.");
-  } finally {
-    setBusyItem(null);
-  }
-}
+      await loadData();
 
       setNotice(
         validation_status === "approved"
@@ -121,12 +108,20 @@ export default function AdminDashboard() {
     setNotice("");
 
     try {
-      const { error: updateError } = await supabase
+      const { data, error: updateError } = await supabase
         .from("tracks")
         .update({ status })
-        .eq("id", trackId);
+        .eq("id", trackId)
+        .select("id, status")
+        .maybeSingle();
 
       if (updateError) throw updateError;
+
+      if (!data) {
+        throw new Error(
+          "Aucune modification effectuée. Vérifie les autorisations UPDATE dans Supabase."
+        );
+      }
 
       setTracks((current) =>
         current.map((track) =>
