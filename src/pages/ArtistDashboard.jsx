@@ -19,6 +19,14 @@ export default function ArtistDashboard() {
   });
 
   const [notifications, setNotifications] = useState([]);
+  const [artistMessages, setArtistMessages] = useState([]);
+const [messageSubject, setMessageSubject] = useState("");
+const [messageBody, setMessageBody] = useState("");
+const [messageLoading, setMessageLoading] = useState(false);
+const [messageSending, setMessageSending] = useState(false);
+const [messageError, setMessageError] = useState("");
+const [messageSuccess, setMessageSuccess] = useState("");
+const [showContact, setShowContact] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
 
