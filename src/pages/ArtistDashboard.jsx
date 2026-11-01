@@ -76,7 +76,13 @@ useEffect(() => {
         );
       }
     )
-    .subscribe();
+    .subscribe((status, error) => {
+  console.log("État des notifications SOUND-B :", status);
+
+  if (error) {
+    console.error("Erreur Realtime :", error);
+  }
+});
 
   return () => {
     supabase.removeChannel(channel);
