@@ -275,3 +275,7 @@
     padding: 15px;
   }
 }
+.admin-btn.preview {
+  background: #245b83;
+  color: white;
+    }
