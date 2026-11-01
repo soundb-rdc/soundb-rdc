@@ -83,36 +83,7 @@ export default function AdminDashboard() {
     loadData();
   }, [loadData]);
 
-  async function changeArtistStatus(artistId, validation_status) {
-    if (!supabase || busyItem !== null) return;
-
-    setBusyItem(artistId);
-    setError("");
-    setNotice("");
-
-    try {
-      const { data, error: updateError } = await supabase
-        .from("profiles")
-        .update({ validation_status })
-        .eq("id", artistId)
-        .select("id, validation_status")
-        .maybeSingle();
-
-      if (updateError) throw updateError;
-      if (!data) {
-        throw new Error("Aucune modification effectuée. Vérifie les autorisations UPDATE dans Supabase.");
-      }
-
-      await loadData();
-      setNotice(validation_status === "approved"
-        ? "Artiste validé avec succès."
-        : "Demande de l'artiste refusée.");
-    } catch (err) {
-      setError(err.message || "Impossible de modifier le statut.");
-    } finally {
-      setBusyItem(null);
-    }
-  }
+  async function changeTrackStatus(trackId, status) {
 
   async function changeArtistSuspension(artistId, is_suspended) {
     if (!supabase || busyItem !== null) return;
