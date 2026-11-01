@@ -405,11 +405,7 @@ window.alert("Nombre de sanctions supprimées : " + data);
   {artist.avatar_url ? (
     <img
       className="admin-avatar-image"
-      src={
-        supabase.storage
-          .from("avatar")
-          .getPublicUrl(artist.avatar_url).data.publicUrl
-      }
+      src={artist.avatar_url}
       alt={`Photo de ${name}`}
       onError={(event) => {
         event.currentTarget.style.display = "none";
