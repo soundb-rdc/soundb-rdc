@@ -10,6 +10,7 @@ export default function AdminDashboard() {
   const [tracks, setTracks] = useState([]);
   const [suspensionHistory, setSuspensionHistory] = useState([]);
   const [historyProfiles, setHistoryProfiles] = useState({});
+  const [historyBusy, setHistoryBusy] = useState(false);
   const [busyItem, setBusyItem] = useState(null);
   const [previewUrls, setPreviewUrls] = useState({});
   const [trackSearch, setTrackSearch] = useState("");
@@ -84,7 +85,40 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+async function clearSuspensionHistory() {
+  if (!supabase || historyBusy) return;
 
+  if (suspensionHistory.length === 0) return;
+
+  const confirmed = window.confirm(
+    "Voulez-vous vraiment vider tout l'historique des sanctions ?\n\nCette action est définitive. Les comptes des artistes et leurs notifications ne seront pas modifiés."
+  );
+
+  if (!confirmed) return;
+
+  setHistoryBusy(true);
+  setError("");
+  setNotice("");
+
+  try {
+    const { data, error: rpcError } = await supabase.rpc(
+      "clear_artist_suspension_history"
+    );
+
+    if (rpcError) throw rpcError;
+
+    setSuspensionHistory([]);
+    setHistoryProfiles({});
+
+    setNotice(
+      `Historique vidé avec succès. ${Number(data) || 0} entrée(s) supprimée(s).`
+    );
+  } catch (err) {
+    setError(err.message || "Impossible de vider l'historique.");
+  } finally {
+    setHistoryBusy(false);
+  }
+      }
   async function changeArtistStatus(artistId, validation_status) {
     if (!supabase || busyItem !== null) return;
 
@@ -578,9 +612,19 @@ export default function AdminDashboard() {
 
       <section className="admin-section">
         <div className="admin-section-heading">
-          <h2>Historique des sanctions</h2>
-          <span>{suspensionHistory.length}</span>
-        </div>
+  <h2>Historique des sanctions</h2>
+
+  <span>{suspensionHistory.length}</span>
+
+  <button
+    className="admin-btn delete"
+    type="button"
+    disabled={historyBusy || suspensionHistory.length === 0}
+    onClick={clearSuspensionHistory}
+  >
+    {historyBusy ? "Suppression..." : "🗑 Vider l'historique"}
+  </button>
+</div>
 
         {suspensionHistory.length === 0 ? (
           <p className="admin-empty">
