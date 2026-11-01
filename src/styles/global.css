@@ -216,3 +216,41 @@
     grid-template-columns: 1fr;
   }
   }
+/* INFORMATIONS DE PRODUCTION */
+
+.track-production {
+  margin: 25px 0;
+}
+
+.production-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.production-info div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 14px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 9px;
+}
+
+.production-info span {
+  color: #999;
+  font-size: 12px;
+}
+
+.production-info strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+@media (max-width: 500px) {
+  .production-info {
+    grid-template-columns: 1fr;
+  }
+}
