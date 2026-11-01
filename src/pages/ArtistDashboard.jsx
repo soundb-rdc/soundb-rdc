@@ -115,7 +115,59 @@ export default function ArtistDashboard() {
       <p className="eyebrow">ESPACE PERSONNEL</p>
 
       <h1>Tableau de bord artiste</h1>
+      
+{/* NOTIFICATION DE VALIDATION DU PROFIL */}
 
+{profile?.validation_status === "pending" && (
+  <div style={{
+    padding: "16px",
+    margin: "20px 0",
+    borderRadius: "10px",
+    background: "rgba(255, 170, 0, 0.12)",
+    border: "1px solid #e6a23c"
+  }}>
+    <strong>⏳ Profil en cours de vérification</strong>
+    <p>
+      Votre demande d'inscription est bien reçue.
+      Notre équipe examine actuellement votre profil.
+      Vous serez informé dès qu'une décision sera prise.
+    </p>
+  </div>
+)}
+
+{profile?.validation_status === "approved" && (
+  <div style={{
+    padding: "16px",
+    margin: "20px 0",
+    borderRadius: "10px",
+    background: "rgba(40, 180, 100, 0.12)",
+    border: "1px solid #28b464"
+  }}>
+    <strong>🎉 Félicitations ! Votre profil est validé.</strong>
+    <p>
+      Votre profil artiste est maintenant approuvé
+      et peut être visible sur SOUND-B.
+      Bienvenue officiellement dans notre communauté !
+    </p>
+  </div>
+)}
+
+{profile?.validation_status === "rejected" && (
+  <div style={{
+    padding: "16px",
+    margin: "20px 0",
+    borderRadius: "10px",
+    background: "rgba(220, 50, 50, 0.12)",
+    border: "1px solid #dc3232"
+  }}>
+    <strong>⚠️ Votre demande n'a pas été approuvée.</strong>
+    <p>
+      Votre profil artiste n'a pas été accepté.
+      Veuillez contacter l'administration SOUND-B
+      pour obtenir davantage d'informations.
+    </p>
+  </div>
+)}
       {/* PROFIL ARTISTE */}
 
       <div className="artist-profile">
