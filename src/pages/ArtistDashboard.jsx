@@ -32,6 +32,57 @@ export default function ArtistDashboard() {
     loadProfile();
   }, []);
 
+  // ÉCOUTE DES NOTIFICATIONS EN TEMPS RÉEL
+useEffect(() => {
+  if (!supabase || !user?.id) return;
+
+  const channel = supabase
+    .channel(`notifications-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `recipient_id=eq.${user.id}`
+      },
+      (payload) => {
+        setNotifications((previous) => {
+          const exists = previous.some(
+            (notification) => notification.id === payload.new.id
+          );
+
+          if (exists) return previous;
+
+          return [payload.new, ...previous].slice(0, 30);
+        });
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "notifications",
+        filter: `recipient_id=eq.${user.id}`
+      },
+      (payload) => {
+        setNotifications((previous) =>
+          previous.map((notification) =>
+            notification.id === payload.new.id
+              ? payload.new
+              : notification
+          )
+        );
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [user?.id]);
+
   async function loadNotifications(userId) {
     if (!supabase || !userId) return;
 
