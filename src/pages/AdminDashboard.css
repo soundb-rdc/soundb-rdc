@@ -203,13 +203,29 @@
 .admin-avatar {
   width: 43px;
   height: 43px;
+  min-width: 43px;
   border-radius: 50%;
+  overflow: hidden;
   display: grid;
   place-items: center;
   background: #194b37;
   color: #19c37d;
   font-weight: 800;
   font-size: 18px;
+}
+
+.admin-avatar-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.admin-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  place-items: center;
 }
 
 .admin-empty {
