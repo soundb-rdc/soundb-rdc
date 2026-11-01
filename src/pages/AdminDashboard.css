@@ -279,3 +279,35 @@
   background: #245b83;
   color: white;
     }
+.admin-search,
+.admin-filters select {
+  width: 100%;
+  padding: 13px;
+  border-radius: 8px;
+  border: 1px solid #39453f;
+  background: #101613;
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+
+.admin-search {
+  margin-bottom: 12px;
+}
+
+.admin-filters {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.admin-search:focus,
+.admin-filters select:focus {
+  border-color: #19c37d;
+}
+
+@media (max-width: 600px) {
+  .admin-filters {
+    grid-template-columns: 1fr;
+  }
+}
