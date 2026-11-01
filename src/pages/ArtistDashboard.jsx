@@ -18,11 +18,91 @@ export default function ArtistDashboard() {
     recent_downloads: []
   });
 
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationLoading, setNotificationLoading] = useState(false);
+
   const [loading, setLoading] = useState(true);
+
+  const unreadCount = notifications.filter(
+    notification => !notification.is_read
+  ).length;
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  async function loadNotifications(userId) {
+    if (!supabase || !userId) return;
+
+    setNotificationLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("recipient_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      if (error) throw error;
+
+      setNotifications(data || []);
+    } catch (error) {
+      console.error("Erreur de chargement des notifications :", error);
+    } finally {
+      setNotificationLoading(false);
+    }
+  }
+
+  async function markAsRead(notificationId) {
+    if (!supabase || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", notificationId)
+        .eq("recipient_id", user.id);
+
+      if (error) throw error;
+
+      setNotifications(previous =>
+        previous.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, is_read: true }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour :", error);
+      alert("Impossible de marquer cette notification comme lue.");
+    }
+  }
+
+  async function markAllAsRead() {
+    if (!supabase || !user || unreadCount === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("recipient_id", user.id)
+        .eq("is_read", false);
+
+      if (error) throw error;
+
+      setNotifications(previous =>
+        previous.map(notification => ({
+          ...notification,
+          is_read: true
+        }))
+      );
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour :", error);
+      alert("Impossible de marquer les notifications comme lues.");
+    }
+  }
 
   async function loadProfile() {
     if (!supabase) {
@@ -53,6 +133,9 @@ export default function ArtistDashboard() {
       if (profileError) throw profileError;
 
       setProfile(profileData);
+
+      // Chargement des notifications
+      await loadNotifications(auth.user.id);
 
       // Statistiques générales
       const { data: statistics, error: statsError } =
@@ -115,59 +198,253 @@ export default function ArtistDashboard() {
       <p className="eyebrow">ESPACE PERSONNEL</p>
 
       <h1>Tableau de bord artiste</h1>
-      
-{/* NOTIFICATION DE VALIDATION DU PROFIL */}
 
-{profile?.validation_status === "pending" && (
-  <div style={{
-    padding: "16px",
-    margin: "20px 0",
-    borderRadius: "10px",
-    background: "rgba(255, 170, 0, 0.12)",
-    border: "1px solid #e6a23c"
-  }}>
-    <strong>⏳ Profil en cours de vérification</strong>
-    <p>
-      Votre demande d'inscription est bien reçue.
-      Notre équipe examine actuellement votre profil.
-      Vous serez informé dès qu'une décision sera prise.
-    </p>
-  </div>
-)}
+      {/* CENTRE DE NOTIFICATIONS */}
 
-{profile?.validation_status === "approved" && (
-  <div style={{
-    padding: "16px",
-    margin: "20px 0",
-    borderRadius: "10px",
-    background: "rgba(40, 180, 100, 0.12)",
-    border: "1px solid #28b464"
-  }}>
-    <strong>🎉 Félicitations ! Votre profil est validé.</strong>
-    <p>
-      Votre profil artiste est maintenant approuvé
-      et peut être visible sur SOUND-B.
-      Bienvenue officiellement dans notre communauté !
-    </p>
-  </div>
-)}
+      <div
+        style={{
+          margin: "20px 0",
+          padding: "18px",
+          borderRadius: "12px",
+          background: "rgba(255, 138, 50, 0.08)",
+          border: "1px solid rgba(255, 138, 50, 0.3)"
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "12px",
+            flexWrap: "wrap"
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setShowNotifications(!showNotifications)}
+            style={{
+              border: "none",
+              background: "transparent",
+              color: "inherit",
+              cursor: "pointer",
+              fontSize: "17px",
+              fontWeight: "700",
+              padding: "5px 0"
+            }}
+          >
+            🔔 Mes notifications
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  display: "inline-block",
+                  marginLeft: "9px",
+                  padding: "3px 8px",
+                  borderRadius: "20px",
+                  background: "#dc3232",
+                  color: "#fff",
+                  fontSize: "12px"
+                }}
+              >
+                {unreadCount}
+              </span>
+            )}
+          </button>
 
-{profile?.validation_status === "rejected" && (
-  <div style={{
-    padding: "16px",
-    margin: "20px 0",
-    borderRadius: "10px",
-    background: "rgba(220, 50, 50, 0.12)",
-    border: "1px solid #dc3232"
-  }}>
-    <strong>⚠️ Votre demande n'a pas été approuvée.</strong>
-    <p>
-      Votre profil artiste n'a pas été accepté.
-      Veuillez contacter l'administration SOUND-B
-      pour obtenir davantage d'informations.
-    </p>
-  </div>
-)}
+          <button
+            type="button"
+            onClick={() => loadNotifications(user.id)}
+            disabled={notificationLoading}
+            style={{
+              padding: "7px 12px",
+              borderRadius: "7px",
+              border: "1px solid #ff8a32",
+              background: "transparent",
+              color: "inherit",
+              cursor: "pointer"
+            }}
+          >
+            {notificationLoading ? "Actualisation..." : "↻ Actualiser"}
+          </button>
+        </div>
+
+        {showNotifications && (
+          <div style={{ marginTop: "18px" }}>
+
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={markAllAsRead}
+                style={{
+                  marginBottom: "15px",
+                  padding: "8px 12px",
+                  border: "none",
+                  borderRadius: "7px",
+                  background: "#ff8a32",
+                  color: "#171717",
+                  fontWeight: "600",
+                  cursor: "pointer"
+                }}
+              >
+                Tout marquer comme lu
+              </button>
+            )}
+
+            {notificationLoading && notifications.length === 0 ? (
+              <p className="muted">Chargement des notifications...</p>
+            ) : notifications.length === 0 ? (
+              <p className="muted">
+                Vous n'avez aucune notification pour le moment.
+              </p>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px"
+                }}
+              >
+                {notifications.map(notification => (
+                  <div
+                    key={notification.id}
+                    style={{
+                      padding: "14px",
+                      borderRadius: "9px",
+                      background: notification.is_read
+                        ? "rgba(255,255,255,0.04)"
+                        : "rgba(255,138,50,0.13)",
+                      border: notification.is_read
+                        ? "1px solid rgba(255,255,255,0.1)"
+                        : "1px solid #ff8a32"
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "10px",
+                        flexWrap: "wrap"
+                      }}
+                    >
+                      <strong>
+                        {notification.type === "warning" ? "⚠️ " : "✅ "}
+                        {notification.title}
+                      </strong>
+
+                      {!notification.is_read && (
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "#ff8a32",
+                            fontWeight: "700"
+                          }}
+                        >
+                          NON LUE
+                        </span>
+                      )}
+                    </div>
+
+                    <p
+                      style={{
+                        margin: "10px 0",
+                        lineHeight: "1.6"
+                      }}
+                    >
+                      {notification.message}
+                    </p>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "10px",
+                        flexWrap: "wrap"
+                      }}
+                    >
+                      <small className="muted">
+                        {new Date(notification.created_at).toLocaleString(
+                          "fr-FR"
+                        )}
+                      </small>
+
+                      {!notification.is_read && (
+                        <button
+                          type="button"
+                          onClick={() => markAsRead(notification.id)}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            color: "#ff8a32",
+                            cursor: "pointer",
+                            fontWeight: "600"
+                          }}
+                        >
+                          Marquer comme lu
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* NOTIFICATION DE VALIDATION DU PROFIL */}
+
+      {profile?.validation_status === "pending" && (
+        <div style={{
+          padding: "16px",
+          margin: "20px 0",
+          borderRadius: "10px",
+          background: "rgba(255, 170, 0, 0.12)",
+          border: "1px solid #e6a23c"
+        }}>
+          <strong>⏳ Profil en cours de vérification</strong>
+          <p>
+            Votre demande d'inscription est bien reçue.
+            Notre équipe examine actuellement votre profil.
+            Vous serez informé dès qu'une décision sera prise.
+          </p>
+        </div>
+      )}
+
+      {profile?.validation_status === "approved" && (
+        <div style={{
+          padding: "16px",
+          margin: "20px 0",
+          borderRadius: "10px",
+          background: "rgba(40, 180, 100, 0.12)",
+          border: "1px solid #28b464"
+        }}>
+          <strong>🎉 Félicitations ! Votre profil est validé.</strong>
+          <p>
+            Votre profil artiste est maintenant approuvé
+            et peut être visible sur SOUND-B.
+            Bienvenue officiellement dans notre communauté !
+          </p>
+        </div>
+      )}
+
+      {profile?.validation_status === "rejected" && (
+        <div style={{
+          padding: "16px",
+          margin: "20px 0",
+          borderRadius: "10px",
+          background: "rgba(220, 50, 50, 0.12)",
+          border: "1px solid #dc3232"
+        }}>
+          <strong>⚠️ Votre demande n'a pas été approuvée.</strong>
+          <p>
+            Votre profil artiste n'a pas été accepté.
+            Veuillez contacter l'administration SOUND-B
+            pour obtenir davantage d'informations.
+          </p>
+        </div>
+      )}
+
       {/* PROFIL ARTISTE */}
 
       <div className="artist-profile">
