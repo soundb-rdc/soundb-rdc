@@ -311,3 +311,11 @@
     grid-template-columns: 1fr;
   }
 }
+.admin-btn.delete {
+  background: #8f2525;
+  color: white;
+}
+
+.admin-btn.delete:hover {
+  background: #c62828;
+}
