@@ -102,8 +102,18 @@ async function clearSuspensionHistory() {
 
   try {
     const { data, error: rpcError } = await supabase.rpc(
-      "clear_artist_suspension_history"
-    );
+  "clear_artist_suspension_history"
+);
+
+console.log("Résultat suppression :", data);
+console.log("Erreur suppression :", rpcError);
+
+if (rpcError) {
+  window.alert("Erreur Supabase : " + rpcError.message);
+  throw rpcError;
+}
+
+window.alert("Nombre de sanctions supprimées : " + data);
 
     if (rpcError) throw rpcError;
 
