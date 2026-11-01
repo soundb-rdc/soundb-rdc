@@ -9,6 +9,9 @@ export default function AdminDashboard() {
   const [artists, setArtists] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [suspensionHistory, setSuspensionHistory] = useState([]);
+  const [artistMessages, setArtistMessages] = useState([]);
+const [replyDrafts, setReplyDrafts] = useState({});
+const [messageBusy, setMessageBusy] = useState(null);
   const [historyProfiles, setHistoryProfiles] = useState({});
   const [historyBusy, setHistoryBusy] = useState(false);
   const [busyItem, setBusyItem] = useState(null);
@@ -41,17 +44,28 @@ export default function AdminDashboard() {
         throw new Error("Accès réservé à l'administrateur.");
       }
 
-      const [artistsResult, tracksResult, historyResult] = await Promise.all([
-        supabase.from("profiles").select("*").eq("role", "artist")
-          .order("created_at", { ascending: false }),
-        supabase.from("tracks").select("*"),
-        supabase.from("artist_suspension_history").select("*")
-          .order("created_at", { ascending: false }).limit(100)
-      ]);
+      const [
+  artistsResult,
+  tracksResult,
+  historyResult,
+  messagesResult
+] = await Promise.all([
+  supabase.from("profiles").select("*").eq("role", "artist")
+    .order("created_at", { ascending: false }),
 
-      if (artistsResult.error) throw artistsResult.error;
-      if (tracksResult.error) throw tracksResult.error;
-      if (historyResult.error) throw historyResult.error;
+  supabase.from("tracks").select("*"),
+
+  supabase.from("artist_suspension_history").select("*")
+    .order("created_at", { ascending: false }).limit(100),
+
+  supabase.from("artist_messages").select("*")
+    .order("created_at", { ascending: false })
+]);
+
+if (artistsResult.error) throw artistsResult.error;
+if (tracksResult.error) throw tracksResult.error;
+if (historyResult.error) throw historyResult.error;
+if (messagesResult.error) throw messagesResult.error;
 
       const history = historyResult.data || [];
       const profileIds = [...new Set(
@@ -75,6 +89,7 @@ export default function AdminDashboard() {
       setTracks(tracksResult.data || []);
       setSuspensionHistory(history);
       setHistoryProfiles(profileMap);
+      setArtistMessages(messagesResult.data || []);
     } catch (err) {
       setError(err.message || "Erreur de chargement.");
     } finally {
