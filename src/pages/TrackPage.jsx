@@ -67,7 +67,31 @@ async function downloadTrack() {
       throw new Error("Impossible de récupérer la couverture.");
     }
 
-    const coverBuffer = await coverResponse.arrayBuffer();
+    const coverBlob = await coverResponse.blob();
+
+const imageBitmap = await createImageBitmap(coverBlob);
+
+const canvas = document.createElement("canvas");
+canvas.width = imageBitmap.width;
+canvas.height = imageBitmap.height;
+
+const context = canvas.getContext("2d");
+
+context.drawImage(imageBitmap, 0, 0);
+
+imageBitmap.close();
+
+const jpegBlob = await new Promise((resolve, reject) => {
+  canvas.toBlob((blob) => {
+    if (blob) {
+      resolve(blob);
+    } else {
+      reject(new Error("Conversion de la couverture impossible."));
+    }
+  }, "image/jpeg", 0.90);
+});
+
+const coverBuffer = await jpegBlob.arrayBuffer();
 
     const title = cleanFileName(track.title);
     const artistName = cleanFileName(
