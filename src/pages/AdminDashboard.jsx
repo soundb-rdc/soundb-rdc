@@ -64,27 +64,42 @@ export default function AdminDashboard() {
   }, [loadData]);
 
   async function changeArtistStatus(artistId, validation_status) {
-    if (!supabase || busyItem !== null) return;
+  if (!supabase || busyItem !== null) return;
 
-    setBusyItem(artistId);
-    setError("");
-    setNotice("");
+  setBusyItem(artistId);
+  setError("");
+  setNotice("");
 
-    try {
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ validation_status })
-        .eq("id", artistId);
+  try {
+    const { data, error: updateError } = await supabase
+      .from("profiles")
+      .update({ validation_status })
+      .eq("id", artistId)
+      .select("id, validation_status")
+      .maybeSingle();
 
-      if (updateError) throw updateError;
+    if (updateError) throw updateError;
 
-      setArtists((current) =>
-        current.map((artist) =>
-          artist.id === artistId
-            ? { ...artist, validation_status }
-            : artist
-        )
+    if (!data) {
+      throw new Error(
+        "Aucune modification effectuée. Vérifie les autorisations UPDATE dans Supabase."
       );
+    }
+
+    await loadData();
+
+    setNotice(
+      validation_status === "approved"
+        ? "Artiste validé avec succès."
+        : "Demande de l'artiste refusée."
+    );
+
+  } catch (err) {
+    setError(err.message || "Impossible de modifier le statut.");
+  } finally {
+    setBusyItem(null);
+  }
+}
 
       setNotice(
         validation_status === "approved"
