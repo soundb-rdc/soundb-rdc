@@ -9,7 +9,7 @@ export default function AdminDashboard() {
   const [artists, setArtists] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [busyItem, setBusyItem] = useState(null);
-
+const [previewUrls, setPreviewUrls] = useState({});
   const loadData = useCallback(async () => {
     if (!supabase) {
       setError("Connexion Supabase non configurée.");
@@ -216,21 +216,63 @@ export default function AdminDashboard() {
       </article>
     );
   }
+async function previewTrack(track) {
+  if (!track.audio_path) {
+    setError("Aucun fichier audio associé à ce morceau.");
+    return;
+  }
 
+  setError("");
+
+  try {
+    const { data, error } = await supabase.storage
+      .from("music-files")
+      .createSignedUrl(track.audio_path, 3600);
+
+    if (error) throw error;
+
+    setPreviewUrls((current) => ({
+      ...current,
+      [track.id]: data.signedUrl
+    }));
+  } catch (err) {
+    setError("Impossible de lire ce morceau : " + err.message);
+  }
+}
   function renderTrack(track) {
     return (
       <article className="admin-track-card" key={track.id}>
         <div className="admin-track-info">
-          <h3>{track.title || "Sans titre"}</h3>
-          <p>Artiste : {artistLabel(track.artist_id)}</p>
-          <span className={`admin-status ${track.status || "unknown"}`}>
-            {track.status === "approved"
-              ? "Approuvée"
-              : track.status === "rejected"
-              ? "Refusée"
-              : "En attente"}
-          </span>
-        </div>
+  <h3>{track.title || "Sans titre"}</h3>
+
+  <p>Artiste : {artistLabel(track.artist_id)}</p>
+
+  <span className={`admin-status ${track.status || "unknown"}`}>
+    {track.status === "approved"
+      ? "Approuvée"
+      : track.status === "rejected"
+      ? "Refusée"
+      : "En attente"}
+  </span>
+
+  <div style={{ marginTop: "12px" }}>
+    {previewUrls[track.id] ? (
+      <audio
+        controls
+        preload="metadata"
+        src={previewUrls[track.id]}
+        style={{ width: "100%", maxWidth: "350px" }}
+      />
+    ) : (
+      <button
+        className="admin-btn preview"
+        onClick={() => previewTrack(track)}
+      >
+        🎧 Écouter le morceau
+      </button>
+    )}
+  </div>
+</div>
 
         <div className="admin-track-actions">
           {track.status !== "approved" && (
