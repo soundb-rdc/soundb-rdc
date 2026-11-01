@@ -433,3 +433,147 @@ export default function AdminDashboard() {
           ↻ Actualiser
         </button>
       </header>
+{error && <div className="admin-alert error">{error}</div>}
+      {notice && <div className="admin-alert success">{notice}</div>}
+
+      <section className="admin-stats">
+        <div className="admin-stat">
+          <span>Artistes inscrits</span>
+          <strong>{artists.length}</strong>
+        </div>
+        <div className="admin-stat waiting">
+          <span>Artistes en attente</span>
+          <strong>{waitingArtists.length}</strong>
+        </div>
+        <div className="admin-stat accepted">
+          <span>Artistes validés</span>
+          <strong>{approvedArtists.length}</strong>
+        </div>
+        <div className="admin-stat refused">
+          <span>Artistes refusés</span>
+          <strong>{rejectedArtists.length}</strong>
+        </div>
+        <div className="admin-stat">
+          <span>Titres reçus</span>
+          <strong>{tracks.length}</strong>
+        </div>
+        <div className="admin-stat waiting">
+          <span>Musiques en attente</span>
+          <strong>{pendingTracks.length}</strong>
+        </div>
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Demandes de validation des artistes</h2>
+          <span>{waitingArtists.length}</span>
+        </div>
+        {waitingArtists.length === 0
+          ? <p className="admin-empty">Aucune demande en attente.</p>
+          : waitingArtists.map(renderArtist)}
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Artistes validés</h2>
+          <span>{approvedArtists.length}</span>
+        </div>
+        {approvedArtists.length === 0
+          ? <p className="admin-empty">Aucun artiste validé.</p>
+          : approvedArtists.map(renderArtist)}
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Artistes refusés</h2>
+          <span>{rejectedArtists.length}</span>
+        </div>
+        {rejectedArtists.length === 0
+          ? <p className="admin-empty">Aucun artiste refusé.</p>
+          : rejectedArtists.map(renderArtist)}
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Recherche et filtres musicaux</h2>
+        </div>
+
+        <input
+          type="search"
+          placeholder="Rechercher un titre ou un artiste..."
+          value={trackSearch}
+          onChange={(e) => setTrackSearch(e.target.value)}
+          className="admin-search"
+        />
+
+        <div className="admin-filters">
+          <select
+            value={trackStatusFilter}
+            onChange={(e) => setTrackStatusFilter(e.target.value)}
+          >
+            <option value="all">Tous les statuts</option>
+            <option value="pending">En attente</option>
+            <option value="approved">Approuvées</option>
+            <option value="rejected">Refusées</option>
+          </select>
+
+          <select
+            value={trackArtistFilter}
+            onChange={(e) => setTrackArtistFilter(e.target.value)}
+          >
+            <option value="all">Tous les artistes</option>
+            {artists.map((artist) => (
+              <option key={artist.id} value={artist.id}>
+                {artistLabel(artist.id)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <p className="admin-empty">
+          {filteredTracks.length} morceau(x) trouvé(s).
+        </p>
+
+        {filteredTracks.length === 0 ? (
+          <p className="admin-empty">Aucun morceau correspondant.</p>
+        ) : (
+          filteredTracks.map(renderTrack)
+        )}
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Musiques en attente</h2>
+          <span>{pendingTracks.length}</span>
+        </div>
+        {pendingTracks.length === 0
+          ? <p className="admin-empty">Aucune musique en attente.</p>
+          : pendingTracks.map(renderTrack)}
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Musiques approuvées</h2>
+          <span>{approvedTracks.length}</span>
+        </div>
+        {approvedTracks.length === 0
+          ? <p className="admin-empty">Aucune musique approuvée.</p>
+          : approvedTracks.map(renderTrack)}
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-section-heading">
+          <h2>Musiques refusées</h2>
+          <span>{rejectedTracks.length}</span>
+        </div>
+        {rejectedTracks.length === 0
+          ? <p className="admin-empty">Aucune musique refusée.</p>
+          : rejectedTracks.map(renderTrack)}
+      </section>
+
+      <footer className="admin-footer">
+        SOUND-B © 2026 — DMP Creator Production
+      </footer>
+    </main>
+  );
+          }
