@@ -467,3 +467,36 @@
 .admin-message-reply small {
   color: #64748b;
 }
+/* CORRECTION DE LA LISIBILITÉ DES MESSAGES ADMIN */
+
+.admin-message-card {
+  background: #ffffff;
+  color: #000000;
+}
+
+.admin-message-card strong,
+.admin-message-card h3,
+.admin-message-card p,
+.admin-message-card textarea {
+  color: #000000;
+}
+
+.admin-message-card textarea {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+}
+
+.admin-message-card textarea::placeholder {
+  color: #666666;
+}
+
+.admin-message-reply {
+  color: #000000;
+  background: #f0fdf4;
+}
+
+.admin-message-reply strong,
+.admin-message-reply p,
+.admin-message-reply small {
+  color: #000000;
+}
