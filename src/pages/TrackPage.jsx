@@ -67,4 +67,113 @@ export default function TrackPage() {
         if (active) setAudioUrl(audioData.signedUrl);
 
         if (data.cover_path) {
-          const { data:
+          const { data: coverData, error: coverError } =
+            await supabase.storage
+              .from("music-covers")
+              .createSignedUrl(data.cover_path, 3600);
+
+          if (!coverError && active) {
+            setCoverUrl(coverData.signedUrl);
+          }
+        }
+
+        const { data: artistData } = await supabase
+          .from("profiles")
+          .select("artist_name, avatar_url")
+          .eq("id", data.artist_id)
+          .maybeSingle();
+
+        if (active) setArtist(artistData);
+      } catch (err) {
+        console.error("Erreur SOUND-B :", err);
+
+        if (active) {
+          setError(err.message);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    if (supabase) {
+      loadTrack();
+    } else {
+      setError("Connexion à Supabase impossible.");
+      setLoading(false);
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  if (loading) {
+    return <p className="muted">Chargement du titre...</p>;
+  }
+
+  if (error) {
+    return (
+      <section className="page">
+        <h1>Titre indisponible</h1>
+        <p className="muted">{error}</p>
+        <Link className="btn secondary" to="/">
+          Retour au catalogue
+        </Link>
+      </section>
+    );
+  }
+
+  if (!track) {
+    return <p className="muted">Titre introuvable.</p>;
+  }
+
+  return (
+    <section className="page">
+      {coverUrl ? (
+        <img
+          src={coverUrl}
+          alt={track.title}
+          className="cover big"
+        />
+      ) : (
+        <div className="cover big">♫</div>
+      )}
+
+      <p className="eyebrow">LECTURE SOUND-B</p>
+
+      <h1>{track.title}</h1>
+
+      <p className="muted">
+        {artist?.artist_name || "Artiste SOUND-B"}
+      </p>
+
+      <audio
+        controls
+        className="audio"
+        src={audioUrl}
+        preload="metadata"
+        onPlay={() => recordEvent("play", track.id)}
+      >
+        Ton navigateur ne prend pas en charge la lecture audio.
+      </audio>
+
+      <a
+        href={audioUrl}
+        download={`${track.title}.mp3`}
+        className="btn primary"
+        onClick={() => recordEvent("download", track.id)}
+      >
+        Télécharger la chanson
+      </a>
+
+      <br />
+
+      <Link
+        className="btn secondary"
+        to={`/artiste/${track.artist_id}`}
+      >
+        Voir le profil artiste
+      </Link>
+    </section>
+  );
+}
