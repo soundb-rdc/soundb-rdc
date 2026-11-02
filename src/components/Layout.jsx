@@ -53,30 +53,41 @@ const showLogout =
     };
   }, []);
 
-                // SUIVI DES NOUVEAUTÉS POUR LES VISITEURS
+                // SUIVI ET ACTUALISATION DES NOUVEAUTÉS
 useEffect(() => {
   if (!supabase) return;
 
-  async function checkNewReleases() {
-    const storageKey = "soundb_last_visit";
-    const now = new Date();
+  const storageKey = "soundb_last_visit";
+  const now = new Date();
 
-    const lastVisit = localStorage.getItem(storageKey);
+  // Récupérer la date de la précédente visite
+  const lastVisit = localStorage.getItem(storageKey);
+
+  let previousVisitDate = lastVisit
+    ? new Date(lastVisit)
+    : new Date(now);
+
+  if (isNaN(previousVisitDate.getTime())) {
+    previousVisitDate = new Date(now);
+  }
+
+  // Enregistrer la visite actuelle
+  localStorage.setItem(storageKey, now.toISOString());
+
+  async function checkNewReleases() {
+    const currentDate = new Date();
 
     // Début de la semaine : lundi à 00h00
-    const weekStart = new Date(now);
-    const day = (now.getDay() + 6) % 7;
-    weekStart.setDate(now.getDate() - day);
+    const weekStart = new Date(currentDate);
+    const day = (currentDate.getDay() + 6) % 7;
+
+    weekStart.setDate(currentDate.getDate() - day);
     weekStart.setHours(0, 0, 0, 0);
 
-    // On retient la date la plus récente
-    const lastVisitDate = lastVisit
-      ? new Date(lastVisit)
-      : weekStart;
-
+    // Utiliser la date la plus récente
     const since =
-      lastVisitDate > weekStart
-        ? lastVisitDate
+      previousVisitDate > weekStart
+        ? previousVisitDate
         : weekStart;
 
     const { count, error } = await supabase
@@ -86,17 +97,27 @@ useEffect(() => {
       .gte("published_at", since.toISOString());
 
     if (error) {
-      console.error("Erreur de comptage des nouveautés :", error);
+      console.error(
+        "Erreur de comptage des nouveautés :",
+        error
+      );
       return;
     }
 
     setNewReleaseCount(count || 0);
-
-    // Enregistrer la présence actuelle
-    localStorage.setItem(storageKey, now.toISOString());
   }
 
+  // Première vérification
   checkNewReleases();
+
+  // Actualisation toutes les 60 secondes
+  const interval = setInterval(() => {
+    checkNewReleases();
+  }, 60000);
+
+  return () => {
+    clearInterval(interval);
+  };
 }, []);
 
   async function logout() {
