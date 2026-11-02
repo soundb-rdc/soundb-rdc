@@ -396,25 +396,3 @@
   width: 22px;
   height: 22px;
 }
-/* POSITIONNEMENT DU BOUTON DE DECONNEXION */
-
-.topbar {
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.topbar nav {
-  flex: 1;
-  justify-content: center;
-}
-
-.logout-btn,
-.login-link {
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-.logout-btn {
-  white-space: nowrap;
-}
