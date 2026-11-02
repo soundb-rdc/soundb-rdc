@@ -81,6 +81,9 @@ export default function Layout({ children }) {
           <NavLink to="/" end>
             Accueil
           </NavLink>
+          <NavLink to="/playliste">
+  Playliste
+</NavLink>
 
           <NavLink to="/recherche">
             Découvrir
