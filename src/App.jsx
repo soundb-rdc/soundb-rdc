@@ -26,6 +26,7 @@ export default function App() {
         <Route path="/inscription" element={<Register />} />
 
         <Route path="/artistes" element={<Artists />} />
+        <Route path="/playliste" element={<Playlist />} />
 
         <Route
           path="/artiste/tableau-de-bord"
