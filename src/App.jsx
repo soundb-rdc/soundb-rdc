@@ -1,84 +1,52 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import TrackCard from "../components/TrackCard";
-import { loadApprovedTracks } from "../lib/loadApprovedTracks";
+import { Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
 
-export default function Home() {
-  const [tracks, setTracks] = useState([]);
-  const [loading, setLoading] = useState(true);
+import Home from "./pages/Home";
+import Playlist from "./pages/Playlist";
+import Search from "./pages/Search";
+import TrackPage from "./pages/TrackPage";
+import ArtistPage from "./pages/ArtistPage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ArtistDashboard from "./pages/ArtistDashboard";
+import EditArtistProfile from "./pages/EditArtistProfile";
+import UploadTrack from "./pages/UploadTrack";
+import AdminDashboard from "./pages/AdminDashboard";
+import NotFound from "./pages/NotFound";
+import Artists from "./pages/Artists";
 
-  useEffect(() => {
-    async function load() {
-      const data = await loadApprovedTracks();
-      setTracks(data);
-      setLoading(false);
-    }
-
-    load();
-  }, []);
-
+export default function App() {
   return (
-    <>
-      {/* SECTION D'ACCUEIL */}
-      <section className="hero">
-        <p className="eyebrow">LA MUSIQUE À PORTÉE DE CLIC</p>
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/playliste" element={<Playlist />} />
+        <Route path="/recherche" element={<Search />} />
+        <Route path="/titre/:id" element={<TrackPage />} />
+        <Route path="/artiste/:id" element={<ArtistPage />} />
+        <Route path="/connexion" element={<Login />} />
+        <Route path="/inscription" element={<Register />} />
 
-        <h1>
-          Découvre les sons<br />
-          <span>qui te ressemblent.</span>
-        </h1>
+        <Route path="/artistes" element={<Artists />} />
 
-        <p>
-          Écoute et découvre les artistes.
-          Retrouve la musique que tu aimes sur SOUND-B.
-        </p>
+        <Route
+          path="/artiste/tableau-de-bord"
+          element={<ArtistDashboard />}
+        />
 
-        <div className="actions">
-          <Link className="btn primary" to="/recherche">
-            Explorer la musique
-          </Link>
+        <Route
+          path="/artiste/modifier-profil"
+          element={<EditArtistProfile />}
+        />
 
-          <Link className="btn secondary" to="/inscription">
-            Devenir artiste
-          </Link>
-        </div>
-      </section>
+        <Route
+          path="/artiste/ajouter-musique"
+          element={<UploadTrack />}
+        />
 
-      {/* TITRES À DÉCOUVRIR */}
-      <section>
-        <div className="section-heading">
-          <h2>Titres à découvrir</h2>
-          <Link to="/recherche">Tout voir →</Link>
-        </div>
-
-        {loading ? (
-          <p className="muted">Chargement des musiques...</p>
-        ) : tracks.length > 0 ? (
-          <div className="track-list">
-            {tracks.map(track => (
-              <TrackCard key={track.id} track={track} />
-            ))}
-          </div>
-        ) : (
-          <p className="muted">
-            Aucune musique disponible pour le moment.
-          </p>
-        )}
-      </section>
-
-      {/* ESPACE ARTISTE */}
-      <section className="artist-callout">
-        <h2>Tu fais de la musique ?</h2>
-
-        <p>
-          Crée ton espace artiste et soumets tes titres
-          à l’équipe SOUND-B pour validation.
-        </p>
-
-        <Link className="btn primary" to="/inscription">
-          Créer mon compte artiste
-        </Link>
-      </section>
-    </>
+        <Route path="/administration" element={<AdminDashboard />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Layout>
   );
 }
