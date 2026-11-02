@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 export default function Layout({ children }) {
@@ -7,6 +7,11 @@ export default function Layout({ children }) {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+const showLogout =
+  location.pathname === "/artiste/tableau-de-bord" ||
+  location.pathname === "/administration";
 
   useEffect(() => {
     if (!supabase) return;
@@ -92,19 +97,19 @@ export default function Layout({ children }) {
           </NavLink>
         </nav>
 
-        {role ? (
-          <button
-            className="logout-btn"
-            onClick={logout}
-            disabled={loggingOut}
-          >
-            {loggingOut ? "Déconnexion..." : "Déconnexion"}
-          </button>
-        ) : (
-          <Link className="login-link" to="/connexion">
-            Connexion
-          </Link>
-        )}
+        {role && showLogout ? (
+  <button
+    className="logout-btn"
+    onClick={logout}
+    disabled={loggingOut}
+  >
+    {loggingOut ? "Déconnexion..." : "Déconnexion"}
+  </button>
+) : !role ? (
+  <Link className="login-link" to="/connexion">
+    Connexion
+  </Link>
+) : null}
 
       </header>
 
