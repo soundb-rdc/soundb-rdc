@@ -14,6 +14,7 @@ import UploadTrack from "./pages/UploadTrack";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Artists from "./pages/Artists";
+import Nouveautes from "./pages/Nouveautes";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/playliste" element={<Playlist />} />
+        <Route path="/nouveautes" element={<Nouveautes />} />
         <Route path="/recherche" element={<Search />} />
         <Route path="/titre/:id" element={<TrackPage />} />
         <Route path="/artiste/:id" element={<ArtistPage />} />
