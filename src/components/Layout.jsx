@@ -135,14 +135,18 @@ useEffect(() => {
         </Link>
 
         <nav>
-          <NavLink to="/playliste">
-            Playliste
-          </NavLink>
+  <NavLink to="/playliste">
+    Playliste
+  </NavLink>
 
-          <NavLink to="/artistes">
-            Artistes
-          </NavLink>
-        </nav>
+  <NavLink to="/nouveautes">
+    Nouveautés
+  </NavLink>
+
+  <NavLink to="/artistes">
+    Artistes
+  </NavLink>
+</nav>
 
         {role && showLogout ? (
   <button
