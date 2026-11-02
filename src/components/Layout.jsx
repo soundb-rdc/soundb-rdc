@@ -64,8 +64,8 @@ useEffect(() => {
   const lastVisit = localStorage.getItem(storageKey);
 
   let previousVisitDate = lastVisit
-    ? new Date(lastVisit)
-    : new Date(now);
+  ? new Date(lastVisit)
+  : null;
 
   if (isNaN(previousVisitDate.getTime())) {
     previousVisitDate = new Date(now);
@@ -86,9 +86,9 @@ useEffect(() => {
 
     // Utiliser la date la plus récente
     const since =
-      previousVisitDate > weekStart
-        ? previousVisitDate
-        : weekStart;
+  previousVisitDate && previousVisitDate > weekStart
+    ? previousVisitDate
+    : weekStart;
 
     const { count, error } = await supabase
       .from("tracks")
