@@ -8,7 +8,6 @@ export default function Layout({ children }) {
 
   const navigate = useNavigate();
 
-  // Récupération du rôle de l'utilisateur connecté
   useEffect(() => {
     if (!supabase) return;
 
@@ -48,7 +47,6 @@ export default function Layout({ children }) {
     };
   }, []);
 
-  // Fonction de déconnexion
   async function logout() {
     if (!supabase || loggingOut) return;
 
@@ -67,10 +65,17 @@ export default function Layout({ children }) {
     setLoggingOut(false);
   }
 
+  const accountLink =
+    role === "artist"
+      ? "/artiste/tableau-de-bord"
+      : role === "admin"
+      ? "/administration"
+      : "/connexion";
+
   return (
     <div className="app-shell">
 
-      {/* EN-TÊTE */}
+      {/* BARRE DE NAVIGATION PRINCIPALE */}
       <header className="topbar">
 
         <Link className="brand" to="/">
@@ -78,35 +83,15 @@ export default function Layout({ children }) {
         </Link>
 
         <nav>
-          <NavLink to="/" end>
-            Accueil
-          </NavLink>
           <NavLink to="/playliste">
-  Playliste
-</NavLink>
-
-          <NavLink to="/recherche">
-            Découvrir
+            Playliste
           </NavLink>
 
           <NavLink to="/artistes">
-  Artistes
-</NavLink>
-
-          {role === "artist" && (
-            <NavLink to="/artiste/tableau-de-bord">
-              Espace artiste
-            </NavLink>
-          )}
-
-          {role === "admin" && (
-            <NavLink to="/administration">
-              Administration
-            </NavLink>
-          )}
+            Artistes
+          </NavLink>
         </nav>
 
-        {/* CONNEXION OU DÉCONNEXION */}
         {role ? (
           <button
             className="logout-btn"
@@ -128,7 +113,7 @@ export default function Layout({ children }) {
         {children}
       </main>
 
-      {/* NAVIGATION MOBILE EN BAS */}
+      {/* NAVIGATION MOBILE */}
       <nav className="bottom-navigation">
 
         <NavLink to="/" end>
@@ -141,24 +126,10 @@ export default function Layout({ children }) {
           Découvrir
         </NavLink>
 
-        {role === "artist" && (
-          <NavLink to="/artiste/tableau-de-bord">
-            <span>🎙️</span>
-            Artiste
-          </NavLink>
-        )}
-
-        {role === "admin" && (
-          <NavLink to="/administration">
-            <span>⚙</span>
-            Admin
-          </NavLink>
-        )}
-
-        <NavLink to="/playliste">
-  <span>💿</span>
-  Playliste
-</NavLink>
+        <NavLink to={accountLink}>
+          <span>♙</span>
+          Compte
+        </NavLink>
 
       </nav>
 
