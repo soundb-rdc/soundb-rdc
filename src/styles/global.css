@@ -336,3 +336,63 @@
     padding: 9px;
   }
 }
+/* CONTACT WHATSAPP ET RESEAUX SOCIAUX */
+
+.artist-extra-info {
+  margin: 25px 0 40px;
+}
+
+.whatsapp-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 22px;
+  margin: 15px 0;
+  border-radius: 10px;
+  background: #25D366;
+  color: #fff;
+  font-weight: 700;
+  transition: 0.2s;
+}
+
+.whatsapp-contact-btn:hover {
+  background: #1da851;
+  transform: translateY(-2px);
+}
+
+.whatsapp-contact-btn span {
+  font-size: 21px;
+}
+
+.artist-social-section {
+  margin-top: 25px;
+}
+
+.artist-social-links {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 15px;
+}
+
+.artist-social-links a {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #292929;
+  color: #fff;
+  transition: 0.2s;
+}
+
+.artist-social-links a:hover {
+  background: #ff7a18;
+  transform: translateY(-3px);
+}
+
+.artist-social-links svg {
+  width: 22px;
+  height: 22px;
+}
