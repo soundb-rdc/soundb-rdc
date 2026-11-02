@@ -8,6 +8,7 @@ export default function Layout({ children }) {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const [newReleaseCount, setNewReleaseCount] = useState(0);
 
 const showLogout =
   location.pathname === "/artiste/tableau-de-bord" ||
@@ -51,6 +52,52 @@ const showLogout =
       listener.subscription.unsubscribe();
     };
   }, []);
+
+                // SUIVI DES NOUVEAUTÉS POUR LES VISITEURS
+useEffect(() => {
+  if (!supabase) return;
+
+  async function checkNewReleases() {
+    const storageKey = "soundb_last_visit";
+    const now = new Date();
+
+    const lastVisit = localStorage.getItem(storageKey);
+
+    // Début de la semaine : lundi à 00h00
+    const weekStart = new Date(now);
+    const day = (now.getDay() + 6) % 7;
+    weekStart.setDate(now.getDate() - day);
+    weekStart.setHours(0, 0, 0, 0);
+
+    // On retient la date la plus récente
+    const lastVisitDate = lastVisit
+      ? new Date(lastVisit)
+      : weekStart;
+
+    const since =
+      lastVisitDate > weekStart
+        ? lastVisitDate
+        : weekStart;
+
+    const { count, error } = await supabase
+      .from("tracks")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "approved")
+      .gte("published_at", since.toISOString());
+
+    if (error) {
+      console.error("Erreur de comptage des nouveautés :", error);
+      return;
+    }
+
+    setNewReleaseCount(count || 0);
+
+    // Enregistrer la présence actuelle
+    localStorage.setItem(storageKey, now.toISOString());
+  }
+
+  checkNewReleases();
+}, []);
 
   async function logout() {
     if (!supabase || loggingOut) return;
