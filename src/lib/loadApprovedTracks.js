@@ -1,9 +1,7 @@
 import { supabase } from "./supabase";
 
 export async function loadApprovedTracks() {
-  if (!supabase) {
-    return [];
-  }
+  if (!supabase) return [];
 
   const { data: tracks, error } = await supabase
     .from("tracks")
@@ -15,9 +13,7 @@ export async function loadApprovedTracks() {
     return [];
   }
 
-  if (!tracks || tracks.length === 0) {
-    return [];
-  }
+  if (!tracks || tracks.length === 0) return [];
 
   const artistIds = [...new Set(tracks.map(track => track.artist_id))];
 
@@ -40,12 +36,25 @@ export async function loadApprovedTracks() {
         coverUrl = data?.signedUrl || null;
       }
 
+      const { data: stats, error: statsError } = await supabase.rpc(
+        "get_track_stats",
+        { p_track_id: track.id }
+      );
+
+      if (statsError) {
+        console.error("Erreur statistiques :", statsError);
+      }
+
+      const trackStats = stats?.[0] || {};
+
       return {
         ...track,
         artist: artist?.artist_name || "Artiste SOUND-B",
         genre: "Musique",
         emoji: "♫",
-        cover_url: coverUrl
+        cover_url: coverUrl,
+        play_count: Number(trackStats.play_count || 0),
+        download_count: Number(trackStats.download_count || 0)
       };
     })
   );
