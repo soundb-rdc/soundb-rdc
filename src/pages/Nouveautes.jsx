@@ -30,7 +30,7 @@ export default function Nouveautes() {
       <section>
         <p className="eyebrow">LES DERNIÈRES SORTIES</p>
 
-        <h1>🆕 Nouveautés SOUND-B</h1>
+        <h2 className="nouveautes-title">📀 Nouveautés SOUND-B</h2>
 
         <p className="muted">
           Découvre les dernières chansons publiées
