@@ -12,6 +12,7 @@ import UploadTrack from "./pages/UploadTrack";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Artists from "./pages/Artists";
+import Playlist from "./pages/Playlist";
 
 export default function App() {
   return (
