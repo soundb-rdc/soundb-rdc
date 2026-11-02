@@ -2,12 +2,11 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
 export default function UploadTrack() {
-  const [title, setTitle] = useState("");
   const [productionYear, setProductionYear] = useState("2026");
   const [productionLabel, setProductionLabel] = useState("");
   const [releaseType, setReleaseType] = useState("single");
-  const [albumTitle, setAlbumTitle] = useState("");
-  const [audio, setAudio] = useState(null);
+  const [releaseTitle, setReleaseTitle] = useState("");
+  const [audioFiles, setAudioFiles] = useState([]);
   const [cover, setCover] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,13 +19,23 @@ export default function UploadTrack() {
       return;
     }
 
-    if (!audio) {
-      setMessage("Choisis un fichier audio.");
+    if (audioFiles.length === 0) {
+      setMessage("Sélectionne au moins un fichier audio.");
       return;
     }
 
-    if (!audio.type.startsWith("audio/")) {
-      setMessage("Le fichier sélectionné doit être audio.");
+    if (releaseType === "single" && audioFiles.length !== 1) {
+      setMessage("Un single doit contenir une seule chanson.");
+      return;
+    }
+
+    const invalidAudio = audioFiles.some(file => {
+      const extension = file.name.split(".").pop().toLowerCase();
+      return !["mp3", "wav", "ogg", "m4a", "aac", "flac"].includes(extension);
+    });
+
+    if (invalidAudio) {
+      setMessage("Format audio non accepté. Utilise MP3, WAV, OGG, M4A, AAC ou FLAC.");
       return;
     }
 
@@ -44,101 +53,168 @@ export default function UploadTrack() {
       return;
     }
 
-    if (releaseType === "album" && !albumTitle.trim()) {
-      setMessage("Indique le nom de l'album.");
+    if (!releaseTitle.trim()) {
+      setMessage(
+        releaseType === "album"
+          ? "Indique le nom de l'album."
+          : "Indique le titre du single."
+      );
+      return;
+    }
+
+    if (!productionLabel.trim()) {
+      setMessage("Indique le label de production.");
       return;
     }
 
     setLoading(true);
-    setMessage("Envoi en cours...");
+    setMessage("Préparation de la publication...");
+
+    const uploadedAudioPaths = [];
+    let coverPath = null;
+    let albumId = null;
 
     try {
       const { data: authData, error: authError } =
         await supabase.auth.getUser();
 
       if (authError || !authData.user) {
-        throw new Error("Connecte-toi avant d'envoyer une chanson.");
+        throw new Error("Connecte-toi avant de publier.");
       }
 
       const user = authData.user;
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("role, artist_name")
+        .select("role")
         .eq("id", user.id)
         .single();
 
       if (profileError) throw profileError;
 
       if (profile.role !== "artist") {
-        throw new Error("Seuls les artistes peuvent envoyer des chansons.");
+        throw new Error("Seuls les artistes peuvent publier.");
       }
 
-      const audioExtension = audio.name.split(".").pop().toLowerCase();
-      const audioPath = `${user.id}/${Date.now()}.${audioExtension}`;
-
-      const { error: audioError } = await supabase.storage
-        .from("music-files")
-        .upload(audioPath, audio);
-
-      if (audioError) throw audioError;
-
-      let coverPath = null;
-
+      // Créer la couverture
       if (cover) {
-        const coverExtension = cover.name.split(".").pop().toLowerCase();
-        coverPath = `${user.id}/${Date.now()}.${coverExtension}`;
+        const extension = cover.name.split(".").pop().toLowerCase();
+
+        coverPath = `${user.id}/${Date.now()}_cover.${extension}`;
 
         const { error: coverError } = await supabase.storage
           .from("music-covers")
           .upload(coverPath, cover);
 
-        if (coverError) {
-          await supabase.storage.from("music-files").remove([audioPath]);
-          throw coverError;
-        }
+        if (coverError) throw coverError;
       }
 
-      const { error: insertError } = await supabase
-        .from("tracks")
+      // Créer l'album ou le single
+      const { data: album, error: albumError } = await supabase
+        .from("albums")
         .insert({
-          title: title.trim(),
           artist_id: user.id,
+          title: releaseTitle.trim(),
+          release_type: releaseType,
+          cover_path: coverPath,
+          production_year: Number(productionYear),
+          production_label: productionLabel.trim(),
+          status: "pending"
+        })
+        .select("id")
+        .single();
+
+      if (albumError) throw albumError;
+
+      albumId = album.id;
+
+      // Envoyer les fichiers audio
+      const trackRows = [];
+
+      for (let index = 0; index < audioFiles.length; index++) {
+        const file = audioFiles[index];
+        const extension = file.name.split(".").pop().toLowerCase();
+
+        const audioPath =
+          `${user.id}/${Date.now()}_${index}.${extension}`;
+
+        setMessage(
+          `Envoi du morceau ${index + 1}/${audioFiles.length}...`
+        );
+
+        const { error: uploadError } = await supabase.storage
+          .from("music-files")
+          .upload(audioPath, file);
+
+        if (uploadError) throw uploadError;
+
+        uploadedAudioPaths.push(audioPath);
+
+        const trackTitle =
+          releaseType === "single"
+            ? releaseTitle.trim()
+            : file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ").trim();
+
+        trackRows.push({
+          title: trackTitle,
+          artist_id: user.id,
+          album_id: albumId,
+          track_number: index + 1,
           audio_path: audioPath,
           cover_path: coverPath,
           production_year: Number(productionYear),
           production_label: productionLabel.trim(),
           release_type: releaseType,
-          album_title: releaseType === "album" ? albumTitle.trim() : null,
+          album_title: releaseType === "album" ? releaseTitle.trim() : null,
           status: "pending"
         });
-
-      if (insertError) {
-        await supabase.storage.from("music-files").remove([audioPath]);
-
-        if (coverPath) {
-          await supabase.storage.from("music-covers").remove([coverPath]);
-        }
-
-        throw insertError;
       }
 
+      // Enregistrer tous les morceaux
+      const { error: tracksError } = await supabase
+        .from("tracks")
+        .insert(trackRows);
+
+      if (tracksError) throw tracksError;
+
       setMessage(
-        "Chanson envoyée avec succès ! Elle est en attente de validation."
+        releaseType === "album"
+          ? `Album envoyé avec succès : ${audioFiles.length} morceau(x) en attente de validation.`
+          : "Single envoyé avec succès ! En attente de validation."
       );
 
-      setTitle("");
       setProductionYear("2026");
       setProductionLabel("");
       setReleaseType("single");
-      setAlbumTitle("");
-      setAudio(null);
+      setReleaseTitle("");
+      setAudioFiles([]);
       setCover(null);
 
       e.target.reset();
 
     } catch (error) {
+      // Nettoyer les fichiers en cas d'échec
+      if (uploadedAudioPaths.length > 0) {
+        await supabase.storage
+          .from("music-files")
+          .remove(uploadedAudioPaths);
+      }
+
+      if (coverPath) {
+        await supabase.storage
+          .from("music-covers")
+          .remove([coverPath]);
+      }
+
+      if (albumId) {
+        await supabase
+          .from("albums")
+          .delete()
+          .eq("id", albumId);
+      }
+
       setMessage("Erreur : " + error.message);
+
     } finally {
       setLoading(false);
     }
@@ -146,49 +222,21 @@ export default function UploadTrack() {
 
   return (
     <section className="form-card">
-      <p className="eyebrow">NOUVEAU TITRE</p>
-      <h1>Ajouter une musique</h1>
+      <p className="eyebrow">DMP CREATOR PRODUCTION</p>
+
+      <h1>Publier une musique</h1>
 
       <form onSubmit={submit}>
-        <label>
-          Titre de la musique
-          <input
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex : Légende"
-          />
-        </label>
 
         <label>
-          Année de production
-          <input
-            type="number"
-            required
-            min="1900"
-            max={new Date().getFullYear()}
-            value={productionYear}
-            onChange={(e) => setProductionYear(e.target.value)}
-          />
-        </label>
+          Type de publication
 
-        <label>
-          Label de production
-          <input
-            required
-            value={productionLabel}
-            onChange={(e) => setProductionLabel(e.target.value)}
-            placeholder="Ex : DMP Creator Production"
-          />
-        </label>
-
-        <label>
-          Type de sortie
           <select
             value={releaseType}
-            onChange={(e) => {
+            onChange={e => {
               setReleaseType(e.target.value);
-              setAlbumTitle("");
+              setAudioFiles([]);
+              setReleaseTitle("");
             }}
           >
             <option value="single">Single</option>
@@ -196,47 +244,96 @@ export default function UploadTrack() {
           </select>
         </label>
 
-        {releaseType === "album" && (
-          <label>
-            Nom de l'album
-            <input
-              required
-              value={albumTitle}
-              onChange={(e) => setAlbumTitle(e.target.value)}
-              placeholder="Nom de l'album"
-            />
-          </label>
-        )}
-
         <label>
-          Fichier audio (MP3)
+          {releaseType === "album"
+            ? "Nom de l'album"
+            : "Titre du single"}
+
           <input
-            type="file"
-            accept="audio/*"
             required
-            onChange={(e) => setAudio(e.target.files[0])}
+            value={releaseTitle}
+            onChange={e => setReleaseTitle(e.target.value)}
+            placeholder={
+              releaseType === "album"
+                ? "Ex : Mon premier album"
+                : "Ex : Légende"
+            }
           />
         </label>
 
         <label>
-          Image de couverture
+          Année de production
+
+          <input
+            type="number"
+            required
+            min="1900"
+            max={new Date().getFullYear()}
+            value={productionYear}
+            onChange={e => setProductionYear(e.target.value)}
+          />
+        </label>
+
+        <label>
+          Label de production
+
+          <input
+            required
+            value={productionLabel}
+            onChange={e => setProductionLabel(e.target.value)}
+            placeholder="Ex : DMP Creator Production"
+          />
+        </label>
+
+        <label>
+          {releaseType === "album"
+            ? "Fichiers audio des chansons"
+            : "Fichier audio du single"}
+
+          <input
+            type="file"
+            accept=".mp3,.wav,.ogg,.m4a,.aac,.flac"
+            multiple={releaseType === "album"}
+            required
+            onChange={e => setAudioFiles(Array.from(e.target.files || []))}
+          />
+        </label>
+
+        {audioFiles.length > 0 && (
+          <div className="notice">
+            <strong>{audioFiles.length} morceau(x) sélectionné(s)</strong>
+
+            {audioFiles.map((file, index) => (
+              <p key={`${file.name}-${index}`}>
+                {index + 1}. {file.name}
+              </p>
+            ))}
+          </div>
+        )}
+
+        <label>
+          Couverture de la publication
+
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => setCover(e.target.files[0])}
+            onChange={e => setCover(e.target.files[0] || null)}
           />
         </label>
 
         <button className="btn primary" disabled={loading}>
-          {loading ? "Envoi en cours..." : "Soumettre pour validation"}
+          {loading
+            ? "Publication en cours..."
+            : "Soumettre pour validation"}
         </button>
+
       </form>
 
       {message && <p className="notice">{message}</p>}
 
       <p className="muted small">
-        Ne téléverse que les morceaux dont tu détiens les droits
-        ou dont tu as l'autorisation écrite.
+        Les morceaux seront publiés uniquement après validation
+        de l'ensemble de la publication par l'administration SOUND-B.
       </p>
     </section>
   );
