@@ -97,6 +97,43 @@ const tracksWithCovers = await Promise.all(
       coverUrl = coverData?.signedUrl || null;
     }
 
+    const { data: stats, error: statsError } = await supabase.rpc(
+      "get_track_stats",
+      { p_track_id: track.id }
+    );
+
+    if (statsError) {
+      console.error("Erreur statistiques :", statsError);
+    }
+
+    const trackStats = stats?.[0] || {};
+
+    return {
+      ...track,
+      cover_url: coverUrl,
+      artist: artistData.artist_name || "Artiste SOUND-B",
+      play_count: Number(trackStats.play_count || 0),
+      download_count: Number(trackStats.download_count || 0)
+    };
+  })
+);
+
+setTracks(tracksWithCovers);
+    let coverUrl = null;
+
+    if (track.cover_path) {
+      const { data: coverData, error: coverError } =
+        await supabase.storage
+          .from("music-covers")
+          .createSignedUrl(track.cover_path, 3600);
+
+      if (coverError) {
+        console.error("Erreur de chargement de la pochette :", coverError);
+      }
+
+      coverUrl = coverData?.signedUrl || null;
+    }
+
     return {
       ...track,
       cover_url: coverUrl,
