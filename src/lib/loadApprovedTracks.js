@@ -5,7 +5,7 @@ export async function loadApprovedTracks() {
 
   const { data: tracks, error } = await supabase
     .from("tracks")
-    .select("id, title, artist_id, audio_path, cover_path, status")
+    .select("id, title, artist_id, audio_path, cover_path, status, published_at")
     .eq("status", "approved");
 
   if (error) {
