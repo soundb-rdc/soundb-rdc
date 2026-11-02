@@ -396,3 +396,8 @@
   width: 22px;
   height: 22px;
 }
+/* Positionner Déconnexion complètement à droite */
+.topbar .logout-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
