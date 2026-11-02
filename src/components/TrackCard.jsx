@@ -31,11 +31,23 @@ export default function TrackCard({ track }) {
         >
           {track.artist || "Artiste SOUND-B"}
         </Link>
+<div className="track-statistics">
+  <span className="track-stat-item">
+    <span className="stat-icon">▶</span>
+    <strong>
+      {Number(track.play_count || 0).toLocaleString("fr-FR")}
+    </strong>
+    <small>Lectures</small>
+  </span>
 
-        <div className="track-statistics">
-          <span>▶ {Number(track.play_count || 0).toLocaleString("fr-FR")} lectures</span>
-          <span>⬇ {Number(track.download_count || 0).toLocaleString("fr-FR")} téléchargements</span>
-        </div>
+  <span className="track-stat-item">
+    <span className="stat-icon">↓</span>
+    <strong>
+      {Number(track.download_count || 0).toLocaleString("fr-FR")}
+    </strong>
+    <small>Téléchargements</small>
+  </span>
+</div>
       </div>
     </article>
   );
