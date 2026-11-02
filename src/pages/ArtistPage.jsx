@@ -3,18 +3,6 @@ import { Link, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import TrackCard from "../components/TrackCard";
 
-export default function ArtistPage() {
-  const { id } = useParams();
-
-  const [artist, setArtist] = useState(null);
-  const [tracks, setTracks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    loadArtist();
-  }, [id]);
-
 function SocialIcon({ name }) {
   const paths = {
     facebook: "M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.026 1.792-4.7 4.533-4.7 1.312 0 2.686.235 2.686.235v2.953h-1.513c-1.49 0-1.953.93-1.953 1.884v2.287h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073Z",
@@ -30,7 +18,19 @@ function SocialIcon({ name }) {
     </svg>
   );
 }
-  
+
+export default function ArtistPage() {
+  const { id } = useParams();
+
+  const [artist, setArtist] = useState(null);
+  const [tracks, setTracks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    loadArtist();
+  }, [id]);
+
   async function loadArtist() {
     if (!supabase) {
       setError("Connexion à la base de données impossible.");
@@ -45,19 +45,19 @@ function SocialIcon({ name }) {
       const { data: artistData, error: artistError } = await supabase
         .from("profiles")
         .select(`
-  id,
-  artist_name,
-  avatar_url,
-  music_styles,
-  bio,
-  whatsapp_number,
-  city,
-  facebook_url,
-  instagram_url,
-  tiktok_url,
-  youtube_url,
-  spotify_url
-`)
+          id,
+          artist_name,
+          avatar_url,
+          music_styles,
+          bio,
+          whatsapp_number,
+          city,
+          facebook_url,
+          instagram_url,
+          tiktok_url,
+          youtube_url,
+          spotify_url
+        `)
         .eq("id", id)
         .eq("role", "artist")
         .maybeSingle();
@@ -70,80 +70,55 @@ function SocialIcon({ name }) {
         return;
       }
 
+      setArtist(artistData);
+
       const { data: trackData, error: trackError } = await supabase
-  .from("tracks")
-  .select("*")
-  .eq("artist_id", id)
-  .eq("status", "approved");
+        .from("tracks")
+        .select("*")
+        .eq("artist_id", id)
+        .eq("status", "approved");
 
-if (trackError) throw trackError;
+      if (trackError) throw trackError;
 
-setArtist(artistData);
+      const tracksWithCovers = await Promise.all(
+        (trackData || []).map(async (track) => {
+          let coverUrl = null;
 
-const tracksWithCovers = await Promise.all(
-  (trackData || []).map(async (track) => {
-    let coverUrl = null;
+          if (track.cover_path) {
+            const { data: coverData, error: coverError } =
+              await supabase.storage
+                .from("music-covers")
+                .createSignedUrl(track.cover_path, 3600);
 
-    if (track.cover_path) {
-      const { data: coverData, error: coverError } =
-        await supabase.storage
-          .from("music-covers")
-          .createSignedUrl(track.cover_path, 3600);
+            if (coverError) {
+              console.error("Erreur de chargement de la pochette :", coverError);
+            }
 
-      if (coverError) {
-        console.error("Erreur de chargement de la pochette :", coverError);
-      }
+            coverUrl = coverData?.signedUrl || null;
+          }
 
-      coverUrl = coverData?.signedUrl || null;
-    }
+          const { data: stats, error: statsError } = await supabase.rpc(
+            "get_track_stats",
+            { p_track_id: track.id }
+          );
 
-    const { data: stats, error: statsError } = await supabase.rpc(
-      "get_track_stats",
-      { p_track_id: track.id }
-    );
+          if (statsError) {
+            console.error("Erreur statistiques :", statsError);
+          }
 
-    if (statsError) {
-      console.error("Erreur statistiques :", statsError);
-    }
+          const trackStats = stats?.[0] || {};
 
-    const trackStats = stats?.[0] || {};
+          return {
+            ...track,
+            cover_url: coverUrl,
+            artist: artistData.artist_name || "Artiste SOUND-B",
+            play_count: Number(trackStats.play_count || 0),
+            download_count: Number(trackStats.download_count || 0)
+          };
+        })
+      );
 
-    return {
-      ...track,
-      cover_url: coverUrl,
-      artist: artistData.artist_name || "Artiste SOUND-B",
-      play_count: Number(trackStats.play_count || 0),
-      download_count: Number(trackStats.download_count || 0)
-    };
-  })
-);
-
-setTracks(tracksWithCovers);
-    let coverUrl = null;
-
-    if (track.cover_path) {
-      const { data: coverData, error: coverError } =
-        await supabase.storage
-          .from("music-covers")
-          .createSignedUrl(track.cover_path, 3600);
-
-      if (coverError) {
-        console.error("Erreur de chargement de la pochette :", coverError);
-      }
-
-      coverUrl = coverData?.signedUrl || null;
-    }
-
-    return {
-      ...track,
-      cover_url: coverUrl,
-      artist: artistData.artist_name || "Artiste SOUND-B",
-    };
-  })
-);
-
-setTracks(tracksWithCovers);
-
+      setTracks(tracksWithCovers);
     } catch (err) {
       setError(err.message || "Impossible de charger cet artiste.");
     } finally {
@@ -173,7 +148,6 @@ setTracks(tracksWithCovers);
   return (
     <section>
       <div className="public-artist-header">
-
         <img
           src={
             artist.avatar_url ||
@@ -184,111 +158,4 @@ setTracks(tracksWithCovers);
         />
 
         <div>
-          <p className="eyebrow">ARTISTE SOUND-B</p>
-
-          <h1>{artist.artist_name || "Artiste SOUND-B"}</h1>
-
-          <p className="muted">
-            {artist.music_styles?.length
-              ? artist.music_styles.join(" • ")
-              : "Style musical non renseigné"}
-          </p>
-        </div>
-
-      </div>
-            {/* INFORMATIONS ET CONTACT DE L'ARTISTE */}
-      <div className="artist-extra-info">
-
-  {artist.bio && (
-    <div>
-      <h2>À propos de l'artiste</h2>
-      <p>{artist.bio}</p>
-    </div>
-  )}
-
-  {artist.city && (
-    <p>📍 Ville de résidence : {artist.city}</p>
-  )}
-
-  {artist.whatsapp_number && (
-    <a
-      className="whatsapp-contact-btn"
-      href={`https://wa.me/${artist.whatsapp_number.replace(/\D/g, "")}`}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <span>☎</span>
-      Contacter sur WhatsApp
-    </a>
-  )}
-
-  {(artist.facebook_url ||
-    artist.instagram_url ||
-    artist.tiktok_url ||
-    artist.youtube_url ||
-    artist.spotify_url) && (
-
-    <div className="artist-social-section">
-      <h2>Retrouver l'artiste</h2>
-
-      <div className="artist-social-links">
-
-        {artist.facebook_url && (
-          <a href={artist.facebook_url} target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook">
-            <SocialIcon name="facebook" />
-          </a>
-        )}
-
-        {artist.instagram_url && (
-          <a href={artist.instagram_url} target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
-            <SocialIcon name="instagram" />
-          </a>
-        )}
-
-        {artist.tiktok_url && (
-          <a href={artist.tiktok_url} target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok">
-            <SocialIcon name="tiktok" />
-          </a>
-        )}
-
-        {artist.youtube_url && (
-          <a href={artist.youtube_url} target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube">
-            <SocialIcon name="youtube" />
-          </a>
-        )}
-
-        {artist.spotify_url && (
-          <a href={artist.spotify_url} target="_blank" rel="noopener noreferrer" aria-label="Spotify" title="Spotify">
-            <SocialIcon name="spotify" />
-          </a>
-        )}
-
-      </div>
-    </div>
-  )}
-
-</div>
-
-      <div className="section-heading">
-        <h2>Ses chansons</h2>
-        <span className="muted">{tracks.length} titre(s)</span>
-      </div>
-
-      <div className="track-list">
-        {tracks.map((track) => (
-          <TrackCard key={track.id} track={track} />
-        ))}
-      </div>
-
-      {tracks.length === 0 && (
-        <p className="muted">
-          Cet artiste n'a pas encore de chanson approuvée.
-        </p>
-      )}
-
-      <Link className="btn secondary" to="/artistes">
-        ← Retour aux artistes
-      </Link>
-    </section>
-  );
-}
+          <p className="eyebrow">ARTISTE SOUND-B
