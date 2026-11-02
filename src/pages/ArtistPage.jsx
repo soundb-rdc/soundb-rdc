@@ -71,21 +71,41 @@ function SocialIcon({ name }) {
       }
 
       const { data: trackData, error: trackError } = await supabase
-        .from("tracks")
-        .select("*")
-        .eq("artist_id", id)
-        .eq("status", "approved");
+  .from("tracks")
+  .select("*")
+  .eq("artist_id", id)
+  .eq("status", "approved");
 
-      if (trackError) throw trackError;
+if (trackError) throw trackError;
 
-      setArtist(artistData);
+setArtist(artistData);
 
-      setTracks(
-        (trackData || []).map((track) => ({
-          ...track,
-          artist: artistData.artist_name || "Artiste SOUND-B",
-        }))
-      );
+const tracksWithCovers = await Promise.all(
+  (trackData || []).map(async (track) => {
+    let coverUrl = null;
+
+    if (track.cover_path) {
+      const { data: coverData, error: coverError } =
+        await supabase.storage
+          .from("music-covers")
+          .createSignedUrl(track.cover_path, 3600);
+
+      if (coverError) {
+        console.error("Erreur de chargement de la pochette :", coverError);
+      }
+
+      coverUrl = coverData?.signedUrl || null;
+    }
+
+    return {
+      ...track,
+      cover_url: coverUrl,
+      artist: artistData.artist_name || "Artiste SOUND-B",
+    };
+  })
+);
+
+setTracks(tracksWithCovers);
 
     } catch (err) {
       setError(err.message || "Impossible de charger cet artiste.");
