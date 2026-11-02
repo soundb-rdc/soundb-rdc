@@ -38,9 +38,7 @@ export default function Home() {
             Explorer la musique
           </Link>
 
-          <Link className="btn secondary" to="/inscription">
-            Devenir artiste
-          </Link>
+          
         </div>
       </section>
 
