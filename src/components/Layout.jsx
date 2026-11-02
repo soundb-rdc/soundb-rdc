@@ -139,9 +139,15 @@ useEffect(() => {
     Playliste
   </NavLink>
 
-  <NavLink to="/nouveautes">
-    Nouveautés
-  </NavLink>
+  <NavLink to="/nouveautes" className="nav-nouveautes">
+  Nouveautés
+
+  {newReleaseCount > 0 && (
+    <span className="new-release-badge">
+      {newReleaseCount > 99 ? "99+" : newReleaseCount}
+    </span>
+  )}
+</NavLink>
 
   <NavLink to="/artistes">
     Artistes
