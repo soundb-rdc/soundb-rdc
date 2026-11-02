@@ -105,10 +105,6 @@ const showLogout =
   >
     {loggingOut ? "Déconnexion..." : "Déconnexion"}
   </button>
-) : !role ? (
-  <Link className="login-link" to="/connexion">
-    Connexion
-  </Link>
 ) : null}
 
       </header>
