@@ -143,7 +143,7 @@ export default function Layout({ children }) {
 
         {role === "artist" && (
           <NavLink to="/artiste/tableau-de-bord">
-            <span>♫</span>
+            <span>🎙️</span>
             Artiste
           </NavLink>
         )}
@@ -154,6 +154,11 @@ export default function Layout({ children }) {
             Admin
           </NavLink>
         )}
+
+        <NavLink to="/playliste">
+  <span>💿</span>
+  Playliste
+</NavLink>
 
       </nav>
 
