@@ -401,3 +401,54 @@
   margin-left: auto;
   flex-shrink: 0;
 }
+/* STATISTIQUES DES MORCEAUX SOUND-B */
+
+.track-statistics {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  flex-wrap: wrap;
+}
+
+.track-stat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 9px;
+  background: #292018;
+  border: 1px solid #49301e;
+  border-radius: 8px;
+  color: #ffad70;
+}
+
+.track-stat-item .stat-icon {
+  font-size: 12px;
+  color: #ff8a32;
+}
+
+.track-stat-item strong {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 800;
+}
+
+.track-stat-item small {
+  font-size: 10px;
+  color: #b9a18e;
+}
+
+@media (max-width: 500px) {
+  .track-statistics {
+    gap: 5px;
+  }
+
+  .track-stat-item {
+    padding: 6px;
+    gap: 4px;
+  }
+
+  .track-stat-item small {
+    font-size: 9px;
+  }
+}
