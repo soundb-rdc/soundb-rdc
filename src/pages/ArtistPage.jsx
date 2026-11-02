@@ -142,75 +142,75 @@ function SocialIcon({ name }) {
             {/* INFORMATIONS ET CONTACT DE L'ARTISTE */}
       <div className="artist-extra-info">
 
-        {artist.bio && (
-          <div>
-            <h2>À propos de l'artiste</h2>
-            <p>{artist.bio}</p>
-          </div>
+  {artist.bio && (
+    <div>
+      <h2>À propos de l'artiste</h2>
+      <p>{artist.bio}</p>
+    </div>
+  )}
+
+  {artist.city && (
+    <p>📍 Ville de résidence : {artist.city}</p>
+  )}
+
+  {artist.whatsapp_number && (
+    <a
+      className="whatsapp-contact-btn"
+      href={`https://wa.me/${artist.whatsapp_number.replace(/\D/g, "")}`}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span>☎</span>
+      Contacter sur WhatsApp
+    </a>
+  )}
+
+  {(artist.facebook_url ||
+    artist.instagram_url ||
+    artist.tiktok_url ||
+    artist.youtube_url ||
+    artist.spotify_url) && (
+
+    <div className="artist-social-section">
+      <h2>Retrouver l'artiste</h2>
+
+      <div className="artist-social-links">
+
+        {artist.facebook_url && (
+          <a href={artist.facebook_url} target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook">
+            <SocialIcon name="facebook" />
+          </a>
         )}
 
-        {artist.city && (
-          <p>📍 Ville de résidence : {artist.city}</p>
+        {artist.instagram_url && (
+          <a href={artist.instagram_url} target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+            <SocialIcon name="instagram" />
+          </a>
         )}
 
-        {artist.whatsapp_number && (
-          <p>
-            <a
-              href={`https://wa.me/${artist.whatsapp_number.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              💬 Contacter sur WhatsApp
-            </a>
-          </p>
+        {artist.tiktok_url && (
+          <a href={artist.tiktok_url} target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok">
+            <SocialIcon name="tiktok" />
+          </a>
         )}
 
-        {(artist.facebook_url ||
-          artist.instagram_url ||
-          artist.tiktok_url ||
-          artist.youtube_url ||
-          artist.spotify_url) && (
+        {artist.youtube_url && (
+          <a href={artist.youtube_url} target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube">
+            <SocialIcon name="youtube" />
+          </a>
+        )}
 
-          <div>
-            <h2>Réseaux sociaux</h2>
-
-            <div className="artist-social-links">
-
-              {artist.facebook_url && (
-                <a href={artist.facebook_url} target="_blank" rel="noopener noreferrer">
-                  Facebook
-                </a>
-              )}
-
-              {artist.instagram_url && (
-                <a href={artist.instagram_url} target="_blank" rel="noopener noreferrer">
-                  Instagram
-                </a>
-              )}
-
-              {artist.tiktok_url && (
-                <a href={artist.tiktok_url} target="_blank" rel="noopener noreferrer">
-                  TikTok
-                </a>
-              )}
-
-              {artist.youtube_url && (
-                <a href={artist.youtube_url} target="_blank" rel="noopener noreferrer">
-                  YouTube
-                </a>
-              )}
-
-              {artist.spotify_url && (
-                <a href={artist.spotify_url} target="_blank" rel="noopener noreferrer">
-                  Spotify
-                </a>
-              )}
-
-            </div>
-          </div>
+        {artist.spotify_url && (
+          <a href={artist.spotify_url} target="_blank" rel="noopener noreferrer" aria-label="Spotify" title="Spotify">
+            <SocialIcon name="spotify" />
+          </a>
         )}
 
       </div>
+    </div>
+  )}
+
+</div>
 
       <div className="section-heading">
         <h2>Ses chansons</h2>
