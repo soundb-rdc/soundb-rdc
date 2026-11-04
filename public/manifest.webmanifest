@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "SOUND-B | DMP Creator Production",
+  "short_name": "SOUND-B",
+  "description": "Écoutez et téléchargez les musiques des artistes SOUND-B.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "categories": ["music", "entertainment"],
+  "icons": [
+    {
+      "src": "/soundb-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
