@@ -158,4 +158,104 @@ export default function ArtistPage() {
         />
 
         <div>
-          <p className="eyebrow">ARTISTE SOUND-B
+          <p className="eyebrow">ARTISTE SOUND-B</p>
+
+          <h1>{artist.artist_name || "Artiste SOUND-B"}</h1>
+
+          <p className="muted">
+            {artist.music_styles?.length
+              ? artist.music_styles.join(" • ")
+              : "Style musical non renseigné"}
+          </p>
+        </div>
+      </div>
+
+      {/* INFORMATIONS ET CONTACT DE L'ARTISTE */}
+      <div className="artist-extra-info">
+        {artist.bio && (
+          <div>
+            <h2>À propos de l'artiste</h2>
+            <p>{artist.bio}</p>
+          </div>
+        )}
+
+        {artist.city && <p>📍 Ville de résidence : {artist.city}</p>}
+
+        {artist.whatsapp_number && (
+          <a
+            className="whatsapp-contact-btn"
+            href={`https://wa.me/${artist.whatsapp_number.replace(/\D/g, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>☎</span>
+            Contacter sur WhatsApp
+          </a>
+        )}
+
+        {(artist.facebook_url ||
+          artist.instagram_url ||
+          artist.tiktok_url ||
+          artist.youtube_url ||
+          artist.spotify_url) && (
+          <div className="artist-social-section">
+            <h2>Retrouver l'artiste</h2>
+
+            <div className="artist-social-links">
+              {artist.facebook_url && (
+                <a href={artist.facebook_url} target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook">
+                  <SocialIcon name="facebook" />
+                </a>
+              )}
+
+              {artist.instagram_url && (
+                <a href={artist.instagram_url} target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+                  <SocialIcon name="instagram" />
+                </a>
+              )}
+
+              {artist.tiktok_url && (
+                <a href={artist.tiktok_url} target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok">
+                  <SocialIcon name="tiktok" />
+                </a>
+              )}
+
+              {artist.youtube_url && (
+                <a href={artist.youtube_url} target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube">
+                  <SocialIcon name="youtube" />
+                </a>
+              )}
+
+              {artist.spotify_url && (
+                <a href={artist.spotify_url} target="_blank" rel="noopener noreferrer" aria-label="Spotify" title="Spotify">
+                  <SocialIcon name="spotify" />
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="section-heading">
+        <h2>Ses chansons</h2>
+        <span className="muted">{tracks.length} titre(s)</span>
+      </div>
+
+      <div className="track-list">
+        {tracks.map((track) => (
+          <TrackCard key={track.id} track={track} />
+        ))}
+      </div>
+
+      {tracks.length === 0 && (
+        <p className="muted">
+          Cet artiste n'a pas encore de chanson approuvée.
+        </p>
+      )}
+
+      <Link className="btn secondary" to="/artistes">
+        ← Retour aux artistes
+      </Link>
+    </section>
+  );
+}
