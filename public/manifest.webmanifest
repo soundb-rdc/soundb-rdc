@@ -31,9 +31,9 @@
     "purpose": "maskable"
   },
   {
-    "src": "/soundb-icon.svg",
+    "src": "/icon-192.png",
     "sizes": "any",
-    "type": "image/svg+xml"
+    "type": "image/png+xml"
   }
 ]
 }
