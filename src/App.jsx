@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
+import { AudioPlayerProvider } from "./context/AudioPlayerContext";
 
 import Home from "./pages/Home";
 import Playlist from "./pages/Playlist";
@@ -19,37 +20,39 @@ import About from "./pages/About";
 
 export default function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/playliste" element={<Playlist />} />
-        <Route path="/nouveautes" element={<Nouveautes />} />
-        <Route path="/recherche" element={<Search />} />
-        <Route path="/titre/:id" element={<TrackPage />} />
-        <Route path="/artiste/:id" element={<ArtistPage />} />
-        <Route path="/connexion" element={<Login />} />
-        <Route path="/inscription" element={<Register />} />
-<Route path="/a-propos" element={<About />} />
-        <Route path="/artistes" element={<Artists />} />
+    <AudioPlayerProvider>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/playliste" element={<Playlist />} />
+          <Route path="/nouveautes" element={<Nouveautes />} />
+          <Route path="/recherche" element={<Search />} />
+          <Route path="/titre/:id" element={<TrackPage />} />
+          <Route path="/artiste/:id" element={<ArtistPage />} />
+          <Route path="/connexion" element={<Login />} />
+          <Route path="/inscription" element={<Register />} />
+          <Route path="/a-propos" element={<About />} />
+          <Route path="/artistes" element={<Artists />} />
 
-        <Route
-          path="/artiste/tableau-de-bord"
-          element={<ArtistDashboard />}
-        />
+          <Route
+            path="/artiste/tableau-de-bord"
+            element={<ArtistDashboard />}
+          />
 
-        <Route
-          path="/artiste/modifier-profil"
-          element={<EditArtistProfile />}
-        />
+          <Route
+            path="/artiste/modifier-profil"
+            element={<EditArtistProfile />}
+          />
 
-        <Route
-          path="/artiste/ajouter-musique"
-          element={<UploadTrack />}
-        />
+          <Route
+            path="/artiste/ajouter-musique"
+            element={<UploadTrack />}
+          />
 
-        <Route path="/administration" element={<AdminDashboard />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Layout>
+          <Route path="/administration" element={<AdminDashboard />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Layout>
+    </AudioPlayerProvider>
   );
 }
