@@ -237,7 +237,43 @@ window.alert("Nombre de sanctions supprimées : " + data);
       setBusyItem(null);
     }
   }
+async function toggleArtistVerification(artist) {
+  if (!supabase || busyItem !== null) return;
 
+  const newStatus = !artist.is_verified;
+
+  setBusyItem(artist.id);
+  setError("");
+  setNotice("");
+
+  try {
+    const { data, error: updateError } = await supabase
+      .from("profiles")
+      .update({ is_verified: newStatus })
+      .eq("id", artist.id)
+      .eq("role", "artist")
+      .select("id, is_verified")
+      .maybeSingle();
+
+    if (updateError) throw updateError;
+
+    if (!data) {
+      throw new Error("Modification impossible. Vérifie les autorisations Supabase.");
+    }
+
+    await loadData();
+
+    setNotice(
+      newStatus
+        ? "Badge officiel attribué à l'artiste."
+        : "Badge officiel retiré."
+    );
+  } catch (err) {
+    setError(err.message || "Impossible de modifier la vérification.");
+  } finally {
+    setBusyItem(null);
+  }
+}
   async function changeArtistSuspension(artistId, is_suspended) {
     if (!supabase || busyItem !== null) return;
 
@@ -518,6 +554,15 @@ window.alert("Nombre de sanctions supprimées : " + data);
         </div>
 
         <div className="admin-track-actions">
+          <button
+  className="admin-btn approve"
+  disabled={busyItem !== null}
+  onClick={() => toggleArtistVerification(artist)}
+>
+  {artist.is_verified
+    ? "✓ Retirer le badge officiel"
+    : "✓ Vérifier officiellement"}
+</button>
           {artist.validation_status !== "approved" && (
             <button
               className="admin-btn approve"
