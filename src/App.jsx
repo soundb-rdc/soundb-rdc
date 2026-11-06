@@ -29,7 +29,7 @@ export default function App() {
         <Route path="/artiste/:id" element={<ArtistPage />} />
         <Route path="/connexion" element={<Login />} />
         <Route path="/inscription" element={<Register />} />
-
+<Route path="/a-propos" element={<About />} />
         <Route path="/artistes" element={<Artists />} />
 
         <Route
