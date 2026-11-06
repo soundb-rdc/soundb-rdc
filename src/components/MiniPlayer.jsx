@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useAudioPlayer } from "../context/AudioPlayerContext";
 import "./MiniPlayer.css";
 
@@ -36,12 +37,12 @@ export default function MiniPlayer() {
         />
 
         <div className="mini-player-text">
-          <a
-            href={`/titre/${currentTrack.id}`}
+          <Link
+            to={`/titre/${currentTrack.id}`}
             className="mini-player-title"
           >
             {currentTrack.title || "Titre sans nom"}
-          </a>
+          </Link>
 
           <span className="mini-player-artist">
             {currentTrack.artistName || "Artiste SOUND-B"}
@@ -54,7 +55,9 @@ export default function MiniPlayer() {
           type="button"
           className="mini-player-play"
           onClick={togglePlay}
-          aria-label={isPlaying ? "Mettre en pause" : "Reprendre la lecture"}
+          aria-label={
+            isPlaying ? "Mettre en pause" : "Reprendre la lecture"
+          }
         >
           {isPlaying ? "Ⅱ" : "▶"}
         </button>
