@@ -152,7 +152,10 @@ export default function Layout({ children }) {
 
         <nav>
           <NavLink to="/playliste">Playliste</NavLink>
-
+<NavLink to="/favoris">
+    ❤️ Favoris
+  </NavLink>
+          
           <NavLink to="/nouveautes" className="nav-nouveautes">
             Nouveautés
 
