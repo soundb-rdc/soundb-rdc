@@ -49,6 +49,7 @@ export default function ArtistPage() {
           artist_name,
           avatar_url,
           music_styles,
+is_verified,
           bio,
           whatsapp_number,
           city,
@@ -160,7 +161,31 @@ export default function ArtistPage() {
         <div>
           <p className="eyebrow">ARTISTE SOUND-B</p>
 
-          <h1>{artist.artist_name || "Artiste SOUND-B"}</h1>
+          <h1>
+  {artist.artist_name || "Artiste SOUND-B"}
+
+  {artist.is_verified && (
+    <span
+      title="Artiste officiellement vérifié par DMP Creator"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "21px",
+        height: "21px",
+        marginLeft: "8px",
+        borderRadius: "50%",
+        background: "#1689e8",
+        color: "#ffffff",
+        fontSize: "14px",
+        fontWeight: "bold",
+        verticalAlign: "middle"
+      }}
+    >
+      ✓
+    </span>
+  )}
+</h1>
 
           <p className="muted">
             {artist.music_styles?.length
