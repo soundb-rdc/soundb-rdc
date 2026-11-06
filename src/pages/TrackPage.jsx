@@ -9,6 +9,7 @@ function cleanFileName(value) {
     .replace(/\s+/g, "_")
     .replace(/_+/g, "_");
 }
+
 export default function TrackPage() {
   const { id } = useParams();
 
@@ -38,120 +39,124 @@ export default function TrackPage() {
       console.error("Impossible d'enregistrer l'événement :", err);
     }
   }
-async function downloadTrack() {
-  try {
-    if (!audioUrl) {
-      throw new Error("Fichier audio indisponible.");
+
+  async function downloadTrack() {
+    try {
+      if (!audioUrl) {
+        throw new Error("Fichier audio indisponible.");
+      }
+
+      if (!coverUrl) {
+        throw new Error("Cette chanson ne possède pas de couverture.");
+      }
+
+      const { ID3Writer } = await import(
+        /* @vite-ignore */
+        "https://esm.sh/browser-id3-writer@6.4.0"
+      );
+
+      const audioResponse = await fetch(audioUrl);
+
+      if (!audioResponse.ok) {
+        throw new Error("Impossible de récupérer la chanson.");
+      }
+
+      const audioBuffer = await audioResponse.arrayBuffer();
+
+      const coverResponse = await fetch(coverUrl);
+
+      if (!coverResponse.ok) {
+        throw new Error("Impossible de récupérer la couverture.");
+      }
+
+      const coverBlob = await coverResponse.blob();
+
+      const imageBitmap = await createImageBitmap(coverBlob);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = imageBitmap.width;
+      canvas.height = imageBitmap.height;
+
+      const context = canvas.getContext("2d");
+
+      context.drawImage(imageBitmap, 0, 0);
+
+      imageBitmap.close();
+
+      const jpegBlob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Conversion de la couverture impossible."));
+            }
+          },
+          "image/jpeg",
+          0.9
+        );
+      });
+
+      const coverBuffer = await jpegBlob.arrayBuffer();
+
+      const title = cleanFileName(track.title);
+      const artistName = cleanFileName(
+        artist?.artist_name || "Artiste_SOUND_B"
+      );
+
+      const year = track.production_year || new Date().getFullYear();
+
+      const extension = track.audio_path.split(".").pop().toLowerCase();
+
+      if (extension !== "mp3") {
+        throw new Error("Cette fonctionnalité est réservée aux fichiers MP3.");
+      }
+
+      const writer = new ID3Writer(audioBuffer);
+
+      writer
+        .setFrame("TIT2", track.title)
+        .setFrame("TPE1", [artistName])
+        .setFrame("TYER", Number(year));
+
+      if (track.production_label) {
+        writer.setFrame("TPUB", track.production_label);
+      }
+
+      if (track.album_title) {
+        writer.setFrame("TALB", track.album_title);
+      }
+
+      writer.setFrame("APIC", {
+        type: 3,
+        data: coverBuffer,
+        description: "Pochette officielle SOUND-B"
+      });
+
+      writer.addTag();
+
+      const blob = writer.getBlob();
+      const fileUrl = URL.createObjectURL(blob);
+
+      const fileName = `${title}_${artistName}_Audio_Officiel_${year}.mp3`;
+
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.download = fileName;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => URL.revokeObjectURL(fileUrl), 2000);
+
+      recordEvent("download", track.id);
+    } catch (err) {
+      console.error("Erreur de téléchargement SOUND-B :", err);
+      alert("Téléchargement impossible : " + err.message);
     }
-
-    if (!coverUrl) {
-      throw new Error("Cette chanson ne possède pas de couverture.");
-    }
-
-    const { ID3Writer } = await import(
-      /* @vite-ignore */
-      "https://esm.sh/browser-id3-writer@6.4.0"
-    );
-
-    const audioResponse = await fetch(audioUrl);
-
-    if (!audioResponse.ok) {
-      throw new Error("Impossible de récupérer la chanson.");
-    }
-
-    const audioBuffer = await audioResponse.arrayBuffer();
-
-    const coverResponse = await fetch(coverUrl);
-
-    if (!coverResponse.ok) {
-      throw new Error("Impossible de récupérer la couverture.");
-    }
-
-    const coverBlob = await coverResponse.blob();
-
-const imageBitmap = await createImageBitmap(coverBlob);
-
-const canvas = document.createElement("canvas");
-canvas.width = imageBitmap.width;
-canvas.height = imageBitmap.height;
-
-const context = canvas.getContext("2d");
-
-context.drawImage(imageBitmap, 0, 0);
-
-imageBitmap.close();
-
-const jpegBlob = await new Promise((resolve, reject) => {
-  canvas.toBlob((blob) => {
-    if (blob) {
-      resolve(blob);
-    } else {
-      reject(new Error("Conversion de la couverture impossible."));
-    }
-  }, "image/jpeg", 0.90);
-});
-
-const coverBuffer = await jpegBlob.arrayBuffer();
-
-    const title = cleanFileName(track.title);
-    const artistName = cleanFileName(
-      artist?.artist_name || "Artiste_SOUND_B"
-    );
-
-    const year = track.production_year || new Date().getFullYear();
-
-    const extension = track.audio_path.split(".").pop().toLowerCase();
-
-    if (extension !== "mp3") {
-      throw new Error("Cette fonctionnalité est réservée aux fichiers MP3.");
-    }
-
-    const writer = new ID3Writer(audioBuffer);
-
-    writer
-      .setFrame("TIT2", track.title)
-      .setFrame("TPE1", [artistName])
-      .setFrame("TYER", Number(year));
-
-    if (track.production_label) {
-      writer.setFrame("TPUB", track.production_label);
-    }
-
-    if (track.album_title) {
-      writer.setFrame("TALB", track.album_title);
-    }
-
-    writer.setFrame("APIC", {
-      type: 3,
-      data: coverBuffer,
-      description: "Pochette officielle SOUND-B"
-    });
-
-    writer.addTag();
-
-    const blob = writer.getBlob();
-    const fileUrl = URL.createObjectURL(blob);
-
-    const fileName =
-      `${title}_${artistName}_Audio_Officiel_${year}.mp3`;
-
-    const link = document.createElement("a");
-    link.href = fileUrl;
-    link.download = fileName;
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    setTimeout(() => URL.revokeObjectURL(fileUrl), 2000);
-
-    recordEvent("download", track.id);
-
-  } catch (err) {
-    console.error("Erreur de téléchargement SOUND-B :", err);
-    alert("Téléchargement impossible : " + err.message);
   }
-}
+
   useEffect(() => {
     let active = true;
 
@@ -250,11 +255,7 @@ const coverBuffer = await jpegBlob.arrayBuffer();
   return (
     <section className="page">
       {coverUrl ? (
-        <img
-          src={coverUrl}
-          alt={track.title}
-          className="cover big"
-        />
+        <img src={coverUrl} alt={track.title} className="cover big" />
       ) : (
         <div className="cover big">♫</div>
       )}
@@ -263,12 +264,12 @@ const coverBuffer = await jpegBlob.arrayBuffer();
 
       <h1>{track.title}</h1>
 
-      <p className="muted">
-        {artist?.artist_name || "Artiste SOUND-B"}
-      </p>
+      <p className="muted">{artist?.artist_name || "Artiste SOUND-B"}</p>
 
       <audio
         controls
+        controlsList="nodownload"
+        onContextMenu={(e) => e.preventDefault()}
         className="audio"
         src={audioUrl}
         preload="metadata"
@@ -276,50 +277,44 @@ const coverBuffer = await jpegBlob.arrayBuffer();
       >
         Ton navigateur ne prend pas en charge la lecture audio.
       </audio>
-<div className="detail-card track-production">
-  <p className="eyebrow">INFORMATIONS DE PRODUCTION</p>
 
-  <div className="production-info">
-    <div>
-      <span>Année de production</span>
-      <strong>{track.production_year || "Non renseignée"}</strong>
-    </div>
+      <div className="detail-card track-production">
+        <p className="eyebrow">INFORMATIONS DE PRODUCTION</p>
 
-    <div>
-      <span>Label de production</span>
-      <strong>{track.production_label || "Indépendant"}</strong>
-    </div>
+        <div className="production-info">
+          <div>
+            <span>Année de production</span>
+            <strong>{track.production_year || "Non renseignée"}</strong>
+          </div>
 
-    <div>
-      <span>Format de sortie</span>
-      <strong>
-        {track.release_type === "album" ? "Album" : "Single"}
-      </strong>
-    </div>
+          <div>
+            <span>Label de production</span>
+            <strong>{track.production_label || "Indépendant"}</strong>
+          </div>
 
-    {track.release_type === "album" && track.album_title && (
-      <div>
-        <span>Nom de l'album</span>
-        <strong>{track.album_title}</strong>
+          <div>
+            <span>Format de sortie</span>
+            <strong>
+              {track.release_type === "album" ? "Album" : "Single"}
+            </strong>
+          </div>
+
+          {track.release_type === "album" && track.album_title && (
+            <div>
+              <span>Nom de l'album</span>
+              <strong>{track.album_title}</strong>
+            </div>
+          )}
+        </div>
       </div>
-    )}
-  </div>
-</div>
-      <button
-  type="button"
-  className="btn primary"
-  onClick={downloadTrack}
->
-  Télécharger la chanson
-</button>
-      
+
+      <button type="button" className="btn primary" onClick={downloadTrack}>
+        Télécharger la chanson
+      </button>
 
       <br />
 
-      <Link
-        className="btn secondary"
-        to={`/artiste/${track.artist_id}`}
-      >
+      <Link className="btn secondary" to={`/artiste/${track.artist_id}`}>
         Voir le profil artiste
       </Link>
     </section>
