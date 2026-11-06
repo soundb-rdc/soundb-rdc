@@ -19,7 +19,7 @@ import NotFound from "./pages/NotFound";
 import Artists from "./pages/Artists";
 import Nouveautes from "./pages/Nouveautes";
 import About from "./pages/About";
-
+import Favorites from "./pages/Favorites";
 export default function App() {
   return (
     <AudioPlayerProvider>
@@ -28,6 +28,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/playliste" element={<Playlist />} />
+            <Route path="/favoris" element={<Favorites />} />
             <Route path="/nouveautes" element={<Nouveautes />} />
             <Route path="/recherche" element={<Search />} />
             <Route path="/titre/:id" element={<TrackPage />} />
