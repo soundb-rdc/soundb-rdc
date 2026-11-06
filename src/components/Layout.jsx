@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import MiniPlayer from "./MiniPlayer";
 
 export default function Layout({ children }) {
   const [role, setRole] = useState(null);
@@ -59,7 +60,6 @@ export default function Layout({ children }) {
     const storageKey = "soundb_last_visit";
     const now = new Date();
 
-    // Récupérer la date de la précédente visite
     let previousVisitDate = null;
 
     try {
@@ -67,12 +67,12 @@ export default function Layout({ children }) {
 
       if (lastVisit) {
         const parsed = new Date(lastVisit);
+
         if (!isNaN(parsed.getTime())) {
           previousVisitDate = parsed;
         }
       }
 
-      // Enregistrer la visite actuelle
       localStorage.setItem(storageKey, now.toISOString());
     } catch (err) {
       console.error("Stockage local indisponible :", err);
@@ -81,14 +81,12 @@ export default function Layout({ children }) {
     async function checkNewReleases() {
       const currentDate = new Date();
 
-      // Début de la semaine : lundi à 00h00
       const weekStart = new Date(currentDate);
       const day = (currentDate.getDay() + 6) % 7;
 
       weekStart.setDate(currentDate.getDate() - day);
       weekStart.setHours(0, 0, 0, 0);
 
-      // Utiliser la date la plus récente
       const since =
         previousVisitDate && previousVisitDate > weekStart
           ? previousVisitDate
@@ -108,10 +106,8 @@ export default function Layout({ children }) {
       setNewReleaseCount(count || 0);
     }
 
-    // Première vérification
     checkNewReleases();
 
-    // Actualisation toutes les 60 secondes
     const interval = setInterval(() => {
       checkNewReleases();
     }, 60000);
@@ -202,11 +198,14 @@ export default function Layout({ children }) {
         </NavLink>
       </nav>
 
+      {/* MINI-LECTEUR PERMANENT */}
+      <MiniPlayer />
+
       {/* PIED DE PAGE */}
       <footer>
-  © {new Date().getFullYear()} SOUND-B · Une plateforme de DMP Creator
-  Production · <Link to="/a-propos">À propos</Link>
-</footer>
+        © {new Date().getFullYear()} SOUND-B · Une plateforme de DMP Creator
+        Production · <Link to="/a-propos">À propos</Link>
+      </footer>
     </div>
   );
 }
