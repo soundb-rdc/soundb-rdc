@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAudioPlayer } from "../context/AudioPlayerContext";
 import ShareTrack from "../components/ShareTrack";
-
+import { useFavorites } from "../context/FavoritesContext";
 function cleanFileName(value) {
   return String(value || "")
     .trim()
@@ -14,7 +14,7 @@ function cleanFileName(value) {
 
 export default function TrackPage() {
   const { id } = useParams();
-
+const { isFavorite, toggleFavorite } = useFavorites();
   const [track, setTrack] = useState(null);
   const [artist, setArtist] = useState(null);
   const [audioUrl, setAudioUrl] = useState("");
@@ -389,6 +389,17 @@ export default function TrackPage() {
       >
         Télécharger la chanson
       </button>
+<button
+  type="button"
+  className="btn secondary"
+  onClick={() => toggleFavorite(track.id)}
+  style={{ marginTop: "12px" }}
+>
+  {isFavorite(track.id)
+    ? "❤️ Retirer des favoris"
+    : "🤍 Ajouter aux favoris"}
+</button>
+      
 <ShareTrack track={track} artist={artist} />
       <br />
 
