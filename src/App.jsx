@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Artists from "./pages/Artists";
 import Nouveautes from "./pages/Nouveautes";
+import About from "./pages/About";
 
 export default function App() {
   return (
