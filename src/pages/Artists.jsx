@@ -41,7 +41,7 @@ export default function Artists() {
       // Récupérer uniquement les informations publiques
       const { data, error: artistsError } = await supabase
         .from("profiles")
-        .select("id, artist_name, avatar_url, music_styles")
+        .select("id, artist_name, avatar_url, music_styles, is_verified")
         .eq("role", "artist")
         .in("id", artistIds);
 
@@ -91,8 +91,30 @@ export default function Artists() {
               />
 
               <h3>
-                {artist.artist_name || "Artiste SOUND-B"}
-              </h3>
+  {artist.artist_name || "Artiste SOUND-B"}
+
+  {artist.is_verified && (
+    <span
+      title="Artiste officiellement vérifié par DMP Creator"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "19px",
+        height: "19px",
+        marginLeft: "7px",
+        borderRadius: "50%",
+        background: "#1689e8",
+        color: "#ffffff",
+        fontSize: "13px",
+        fontWeight: "bold",
+        verticalAlign: "middle"
+      }}
+    >
+      ✓
+    </span>
+  )}
+</h3>
 
               <p className="muted">
                 {artist.music_styles?.length
