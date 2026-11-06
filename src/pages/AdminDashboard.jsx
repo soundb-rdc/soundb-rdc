@@ -247,18 +247,20 @@ async function toggleArtistVerification(artist) {
   setNotice("");
 
   try {
-    const { data, error: updateError } = await supabase
-      .from("profiles")
-      .update({ is_verified: newStatus })
-      .eq("id", artist.id)
-      .eq("role", "artist")
-      .select("id, is_verified")
-      .maybeSingle();
+    const { data, error: rpcError } = await supabase.rpc(
+      "set_artist_verification",
+      {
+        p_artist_id: artist.id,
+        p_is_verified: newStatus
+      }
+    );
 
-    if (updateError) throw updateError;
+    if (rpcError) throw rpcError;
 
-    if (!data) {
-      throw new Error("Modification impossible. Vérifie les autorisations Supabase.");
+    if (data !== true) {
+      throw new Error(
+        "Aucune modification effectuée. Vérifie le profil de l'artiste."
+      );
     }
 
     await loadData();
@@ -268,8 +270,14 @@ async function toggleArtistVerification(artist) {
         ? "Badge officiel attribué à l'artiste."
         : "Badge officiel retiré."
     );
+
   } catch (err) {
-    setError(err.message || "Impossible de modifier la vérification.");
+    console.error("Erreur vérification artiste :", err);
+
+    setError(
+      err.message || "Impossible de modifier la vérification."
+    );
+
   } finally {
     setBusyItem(null);
   }
