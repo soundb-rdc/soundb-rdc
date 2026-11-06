@@ -204,9 +204,9 @@ export default function Layout({ children }) {
 
       {/* PIED DE PAGE */}
       <footer>
-        © {new Date().getFullYear()} SOUND-B · Une plateforme de DMP Creator
-        Production
-      </footer>
+  © {new Date().getFullYear()} SOUND-B · Une plateforme de DMP Creator
+  Production · <Link to="/a-propos">À propos</Link>
+</footer>
     </div>
   );
 }
