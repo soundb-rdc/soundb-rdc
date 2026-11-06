@@ -16,9 +16,9 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-      <ErrorBoundary>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );
