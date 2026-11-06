@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAudioPlayer } from "../context/AudioPlayerContext";
+import ShareTrack from "../components/ShareTrack";
 
 function cleanFileName(value) {
   return String(value || "")
@@ -388,7 +389,7 @@ export default function TrackPage() {
       >
         Télécharger la chanson
       </button>
-
+<ShareTrack track={track} artist={artist} />
       <br />
 
       <Link
