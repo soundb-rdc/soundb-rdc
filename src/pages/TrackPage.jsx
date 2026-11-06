@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useAudioPlayer } from "../context/AudioPlayerContext";
 
 function cleanFileName(value) {
   return String(value || "")
@@ -20,6 +21,19 @@ export default function TrackPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const {
+    currentTrack,
+    isPlaying,
+    currentTime,
+    duration,
+    playTrack,
+    togglePlay,
+    seekTo,
+  } = useAudioPlayer();
+
+  const isCurrentTrack = currentTrack?.id === track?.id;
+  const isThisTrackPlaying = isCurrentTrack && isPlaying;
+
   async function recordEvent(eventType, trackId) {
     try {
       const { data: auth } = await supabase.auth.getUser();
@@ -29,7 +43,7 @@ export default function TrackPage() {
         .insert({
           track_id: trackId,
           event_type: eventType,
-          user_id: auth.user?.id || null
+          user_id: auth.user?.id || null,
         });
 
       if (error) {
@@ -38,6 +52,34 @@ export default function TrackPage() {
     } catch (err) {
       console.error("Impossible d'enregistrer l'événement :", err);
     }
+  }
+
+  async function handlePlay() {
+    if (!track || !audioUrl) return;
+
+    // Si cette chanson est déjà chargée dans le lecteur global
+    if (isCurrentTrack) {
+      // Recommencer depuis le début si la lecture était terminée
+      if (
+        !isPlaying &&
+        duration > 0 &&
+        currentTime >= duration
+      ) {
+        seekTo(0);
+      }
+
+      await togglePlay();
+      return;
+    }
+
+    // Charger une nouvelle chanson dans le lecteur permanent
+    await playTrack(
+      track,
+      audioUrl,
+      coverUrl,
+      artist?.artist_name || "Artiste SOUND-B",
+      () => recordEvent("play", track.id)
+    );
   }
 
   async function downloadTrack() {
@@ -70,7 +112,6 @@ export default function TrackPage() {
       }
 
       const coverBlob = await coverResponse.blob();
-
       const imageBitmap = await createImageBitmap(coverBlob);
 
       const canvas = document.createElement("canvas");
@@ -78,7 +119,6 @@ export default function TrackPage() {
       canvas.height = imageBitmap.height;
 
       const context = canvas.getContext("2d");
-
       context.drawImage(imageBitmap, 0, 0);
 
       imageBitmap.close();
@@ -89,7 +129,9 @@ export default function TrackPage() {
             if (blob) {
               resolve(blob);
             } else {
-              reject(new Error("Conversion de la couverture impossible."));
+              reject(
+                new Error("Conversion de la couverture impossible.")
+              );
             }
           },
           "image/jpeg",
@@ -104,12 +146,18 @@ export default function TrackPage() {
         artist?.artist_name || "Artiste_SOUND_B"
       );
 
-      const year = track.production_year || new Date().getFullYear();
+      const year =
+        track.production_year || new Date().getFullYear();
 
-      const extension = track.audio_path.split(".").pop().toLowerCase();
+      const extension = track.audio_path
+        .split(".")
+        .pop()
+        .toLowerCase();
 
       if (extension !== "mp3") {
-        throw new Error("Cette fonctionnalité est réservée aux fichiers MP3.");
+        throw new Error(
+          "Cette fonctionnalité est réservée aux fichiers MP3."
+        );
       }
 
       const writer = new ID3Writer(audioBuffer);
@@ -130,7 +178,7 @@ export default function TrackPage() {
       writer.setFrame("APIC", {
         type: 3,
         data: coverBuffer,
-        description: "Pochette officielle SOUND-B"
+        description: "Pochette officielle SOUND-B",
       });
 
       writer.addTag();
@@ -138,7 +186,8 @@ export default function TrackPage() {
       const blob = writer.getBlob();
       const fileUrl = URL.createObjectURL(blob);
 
-      const fileName = `${title}_${artistName}_Audio_Officiel_${year}.mp3`;
+      const fileName =
+        `${title}_${artistName}_Audio_Officiel_${year}.mp3`;
 
       const link = document.createElement("a");
       link.href = fileUrl;
@@ -165,6 +214,11 @@ export default function TrackPage() {
         setLoading(true);
         setError("");
 
+        setTrack(null);
+        setArtist(null);
+        setAudioUrl("");
+        setCoverUrl("");
+
         const { data, error: trackError } = await supabase
           .from("tracks")
           .select("*")
@@ -175,7 +229,9 @@ export default function TrackPage() {
         if (trackError) throw trackError;
 
         if (!data.audio_path) {
-          throw new Error("Aucun fichier audio associé à ce morceau.");
+          throw new Error(
+            "Aucun fichier audio associé à ce morceau."
+          );
         }
 
         if (active) setTrack(data);
@@ -186,7 +242,9 @@ export default function TrackPage() {
             .createSignedUrl(data.audio_path, 3600);
 
         if (audioError) {
-          throw new Error("Erreur de lecture audio : " + audioError.message);
+          throw new Error(
+            "Erreur de lecture audio : " + audioError.message
+          );
         }
 
         if (active) setAudioUrl(audioData.signedUrl);
@@ -241,6 +299,7 @@ export default function TrackPage() {
       <section className="page">
         <h1>Titre indisponible</h1>
         <p className="muted">{error}</p>
+
         <Link className="btn secondary" to="/">
           Retour au catalogue
         </Link>
@@ -255,7 +314,11 @@ export default function TrackPage() {
   return (
     <section className="page">
       {coverUrl ? (
-        <img src={coverUrl} alt={track.title} className="cover big" />
+        <img
+          src={coverUrl}
+          alt={track.title}
+          className="cover big"
+        />
       ) : (
         <div className="cover big">♫</div>
       )}
@@ -264,57 +327,74 @@ export default function TrackPage() {
 
       <h1>{track.title}</h1>
 
-      <p className="muted">{artist?.artist_name || "Artiste SOUND-B"}</p>
+      <p className="muted">
+        {artist?.artist_name || "Artiste SOUND-B"}
+      </p>
 
-      <audio
-        controls
-        controlsList="nodownload"
-        onContextMenu={(e) => e.preventDefault()}
-        className="audio"
-        src={audioUrl}
-        preload="metadata"
-        onPlay={() => recordEvent("play", track.id)}
+      <button
+        type="button"
+        className="btn primary"
+        onClick={handlePlay}
+        disabled={!audioUrl}
       >
-        Ton navigateur ne prend pas en charge la lecture audio.
-      </audio>
+        {isThisTrackPlaying
+          ? "Ⅱ Mettre en pause"
+          : "▶ Écouter"}
+      </button>
 
       <div className="detail-card track-production">
-        <p className="eyebrow">INFORMATIONS DE PRODUCTION</p>
+        <p className="eyebrow">
+          INFORMATIONS DE PRODUCTION
+        </p>
 
         <div className="production-info">
           <div>
             <span>Année de production</span>
-            <strong>{track.production_year || "Non renseignée"}</strong>
+            <strong>
+              {track.production_year || "Non renseignée"}
+            </strong>
           </div>
 
           <div>
             <span>Label de production</span>
-            <strong>{track.production_label || "Indépendant"}</strong>
+            <strong>
+              {track.production_label || "Indépendant"}
+            </strong>
           </div>
 
           <div>
             <span>Format de sortie</span>
             <strong>
-              {track.release_type === "album" ? "Album" : "Single"}
+              {track.release_type === "album"
+                ? "Album"
+                : "Single"}
             </strong>
           </div>
 
-          {track.release_type === "album" && track.album_title && (
-            <div>
-              <span>Nom de l'album</span>
-              <strong>{track.album_title}</strong>
-            </div>
-          )}
+          {track.release_type === "album" &&
+            track.album_title && (
+              <div>
+                <span>Nom de l'album</span>
+                <strong>{track.album_title}</strong>
+              </div>
+            )}
         </div>
       </div>
 
-      <button type="button" className="btn primary" onClick={downloadTrack}>
+      <button
+        type="button"
+        className="btn primary"
+        onClick={downloadTrack}
+      >
         Télécharger la chanson
       </button>
 
       <br />
 
-      <Link className="btn secondary" to={`/artiste/${track.artist_id}`}>
+      <Link
+        className="btn secondary"
+        to={`/artiste/${track.artist_id}`}
+      >
         Voir le profil artiste
       </Link>
     </section>
