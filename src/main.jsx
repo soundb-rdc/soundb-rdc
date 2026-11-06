@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./styles/global.css";
+import ErrorBoundary from "./ErrorBoundary";
 
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
@@ -14,8 +15,10 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
+    <ErrorBoundary>
     <BrowserRouter>
       <App />
     </BrowserRouter>
+      <ErrorBoundary>
   </React.StrictMode>
 );
