@@ -6,13 +6,13 @@ export default function About() {
       <p className="eyebrow">À PROPOS</p>
       <h1>SOUND-B</h1>
       <p className="muted">
-        La plateforme musicale qui met en avant les artistes congolais.
+        La plateforme musicale qui met en avant les artistes bandundois.
       </p>
 
       <div className="detail-card">
         <p className="eyebrow">NOTRE MISSION</p>
         <p>
-          SOUND-B permet aux artistes de publier leurs chansons, de se faire
+          SOUND-B permet aux artistes locaux (Bandundu-ville) de publier leurs chansons, de se faire
           connaître et d'être écoutés partout. Chaque titre est vérifié avant
           sa publication pour garantir la qualité du catalogue.
         </p>
@@ -48,7 +48,7 @@ export default function About() {
       </div>
 
       <p className="muted">
-        SOUND-B est une plateforme de DMP Creator Production.
+        SOUND-B est une plateforme de DMP Creator Production par LUTUMBI Rodrick.
       </p>
 
       <Link className="btn secondary" to="/">
