@@ -226,6 +226,7 @@ async function deleteAllNotifications() {
     console.error("Erreur de suppression :", error);
     alert("Impossible de supprimer : " + (error.message || "erreur inconnue"));
 }
+}
   
 async function loadArtistMessages(userId) {
   if (!supabase || !userId) return;
