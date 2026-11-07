@@ -193,7 +193,7 @@ async function deleteNotification(notificationId) {
     );
   } catch (error) {
     console.error("Erreur de suppression :", error);
-    alert("Impossible de supprimer cette notification.");
+    alert("Impossible de supprimer : " + (error.message || "erreur inconnue"));
   }
 }
 
@@ -224,8 +224,7 @@ async function deleteAllNotifications() {
     setNotifications([]);
   } catch (error) {
     console.error("Erreur de suppression :", error);
-    alert("Impossible de supprimer les notifications.");
-  }
+    alert("Impossible de supprimer : " + (error.message || "erreur inconnue"));
 }
   
 async function loadArtistMessages(userId) {
