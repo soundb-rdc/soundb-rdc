@@ -168,6 +168,66 @@ useEffect(() => {
       alert("Impossible de marquer les notifications comme lues.");
     }
   }
+
+async function deleteNotification(notificationId) {
+  if (!supabase || !user) return;
+
+  if (!window.confirm("Supprimer cette notification ?")) return;
+
+  try {
+    const { data, error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("id", notificationId)
+      .eq("recipient_id", user.id)
+      .select("id");
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error("Suppression refusée par la base de données.");
+    }
+
+    setNotifications(previous =>
+      previous.filter(notification => notification.id !== notificationId)
+    );
+  } catch (error) {
+    console.error("Erreur de suppression :", error);
+    alert("Impossible de supprimer cette notification.");
+  }
+}
+
+async function deleteAllNotifications() {
+  if (!supabase || !user || notifications.length === 0) return;
+
+  if (
+    !window.confirm(
+      "Supprimer toutes vos notifications ? Cette action est définitive."
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("recipient_id", user.id)
+      .select("id");
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error("Suppression refusée par la base de données.");
+    }
+
+    setNotifications([]);
+  } catch (error) {
+    console.error("Erreur de suppression :", error);
+    alert("Impossible de supprimer les notifications.");
+  }
+}
+  
 async function loadArtistMessages(userId) {
   if (!supabase || !userId) return;
 
@@ -402,24 +462,50 @@ async function loadArtistMessages(userId) {
         {showNotifications && (
           <div style={{ marginTop: "18px" }}>
 
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllAsRead}
-                style={{
-                  marginBottom: "15px",
-                  padding: "8px 12px",
-                  border: "none",
-                  borderRadius: "7px",
-                  background: "#ff8a32",
-                  color: "#171717",
-                  fontWeight: "600",
-                  cursor: "pointer"
-                }}
-              >
-                Tout marquer comme lu
-              </button>
-            )}
+            {notifications.length > 0 && (
+  <div
+    style={{
+      display: "flex",
+      gap: "10px",
+      flexWrap: "wrap",
+      marginBottom: "15px"
+    }}
+  >
+    {unreadCount > 0 && (
+      <button
+        type="button"
+        onClick={markAllAsRead}
+        style={{
+          padding: "8px 12px",
+          border: "none",
+          borderRadius: "7px",
+          background: "#ff8a32",
+          color: "#171717",
+          fontWeight: "600",
+          cursor: "pointer"
+        }}
+      >
+        Tout marquer comme lu
+      </button>
+    )}
+
+    <button
+      type="button"
+      onClick={deleteAllNotifications}
+      style={{
+        padding: "8px 12px",
+        border: "1px solid #dc3232",
+        borderRadius: "7px",
+        background: "transparent",
+        color: "#ff7777",
+        fontWeight: "600",
+        cursor: "pointer"
+      }}
+    >
+      🗑️ Tout supprimer
+    </button>
+  </div>
+)}
 
             {notificationLoading && notifications.length === 0 ? (
               <p className="muted">Chargement des notifications...</p>
@@ -495,27 +581,42 @@ async function loadArtistMessages(userId) {
                       }}
                     >
                       <small className="muted">
-                        {new Date(notification.created_at).toLocaleString(
-                          "fr-FR"
-                        )}
-                      </small>
+        {new Date(notification.created_at).toLocaleString("fr-FR")}
+      </small>
 
-                      {!notification.is_read && (
-                        <button
-                          type="button"
-                          onClick={() => markAsRead(notification.id)}
-                          style={{
-                            border: "none",
-                            background: "transparent",
-                            color: "#ff8a32",
-                            cursor: "pointer",
-                            fontWeight: "600"
-                          }}
-                        >
-                          Marquer comme lu
-                        </button>
-                      )}
-                    </div>
+      {!notification.is_read && (
+        <button
+      type="button"
+      onClick={() => markAsRead(notification.id)}
+      style={{
+        border: "none",
+        background: "transparent",
+        color: "#ff8a32",
+        cursor: "pointer",
+        fontWeight: "600"
+      }}
+    >
+      Marquer comme lu
+    </button>
+      )}
+
+      {/* ⬇️ AJOUTE ICI */}
+      <button
+        type="button"
+        onClick={() => deleteNotification(notification.id)}
+        style={{
+          border: "none",
+          background: "transparent",
+          color: "#ff7777",
+          cursor: "pointer",
+          fontWeight: "600"
+        }}
+      >
+        🗑️ Supprimer
+      </button>
+      {/* ⬆️ FIN */}
+
+    </div>
                   </div>
                 ))}
               </div>
