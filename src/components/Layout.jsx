@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import MiniPlayer from "./MiniPlayer";
+import InstallButton from "./InstallButton";
 
 export default function Layout({ children }) {
   const [role, setRole] = useState(null);
@@ -205,10 +206,11 @@ export default function Layout({ children }) {
       <MiniPlayer />
 
       {/* PIED DE PAGE */}
-      <footer>
-        © {new Date().getFullYear()} SOUND-B · Une plateforme de DMP Creator
-        Production · <Link to="/a-propos">À propos</Link>
-      </footer>
+<footer>
+  <InstallButton />
+  © {new Date().getFullYear()} SOUND-B · Une plateforme de DMP Creator
+  Production · <Link to="/a-propos">À propos</Link>
+</footer>
     </div>
   );
 }
